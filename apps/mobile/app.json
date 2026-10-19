@@ -1,0 +1,20 @@
+{
+  "expo": {
+    "name": "Projeto Fono",
+    "slug": "fono-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "fono",
+    "userInterfaceStyle": "automatic",
+    "platforms": ["ios", "android"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0d9488"
+      }
+    },
+    "plugins": ["expo-router"]
+  }
+}

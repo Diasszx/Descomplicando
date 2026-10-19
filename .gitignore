@@ -1,0 +1,35 @@
+# Dependências
+node_modules/
+.pnpm-store/
+
+# Builds e outputs
+dist/
+build/
+.next/
+.expo/
+*.tsbuildinfo
+
+# Turbo & CI caches
+.turbo/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Variáveis de ambiente (apenas .env.example é permitido)
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# IDEs e OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.tmp

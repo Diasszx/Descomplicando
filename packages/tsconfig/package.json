@@ -1,0 +1,11 @@
+{
+  "name": "@fono/tsconfig",
+  "version": "0.1.0",
+  "private": true,
+  "files": [
+    "base.json",
+    "react.json",
+    "nest.json",
+    "expo.json"
+  ]
+}

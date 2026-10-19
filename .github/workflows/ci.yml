@@ -1,0 +1,201 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security:
+    name: Security Scan (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      shared: ${{ steps.filter.outputs.shared }}
+      web: ${{ steps.filter.outputs.web }}
+      api: ${{ steps.filter.outputs.api }}
+      mobile: ${{ steps.filter.outputs.mobile }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node & pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.3
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check affected packages
+        id: filter
+        run: |
+          echo "shared=true" >> "$GITHUB_OUTPUT"
+          echo "web=true" >> "$GITHUB_OUTPUT"
+          echo "api=true" >> "$GITHUB_OUTPUT"
+          echo "mobile=true" >> "$GITHUB_OUTPUT"
+
+  shared:
+    name: Shared Package Pipeline
+    needs: [changes]
+    if: needs.changes.outputs.shared == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+      - name: Run Quality Gate
+        run: pnpm --filter @fono/shared lint && pnpm --filter @fono/shared typecheck && pnpm --filter @fono/shared test && pnpm --filter @fono/shared build
+
+  web:
+    name: Web App Pipeline
+    needs: [changes, shared]
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+      - name: Run Quality Gate
+        run: pnpm --filter @fono/web lint && pnpm --filter @fono/web typecheck && pnpm --filter @fono/web test && pnpm --filter @fono/web build
+
+  api:
+    name: API Pipeline
+    needs: [changes, shared]
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgrespassword
+          POSTGRES_DB: fono_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+      - name: Check destructive migrations
+        run: pnpm --filter @fono/api db:validate
+        env:
+          ALLOW_DESTRUCTIVE_MIGRATION: ${{ contains(github.event.pull_request.labels.*.name, 'allow-destructive-migration') }}
+          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/fono_test?schema=public
+      - name: Run Quality Gate
+        run: pnpm --filter @fono/api lint && pnpm --filter @fono/api typecheck && pnpm --filter @fono/api test && pnpm --filter @fono/api build
+        env:
+          DATABASE_URL: postgresql://postgres:postgrespassword@localhost:5432/fono_test?schema=public
+
+  mobile:
+    name: Mobile App Pipeline
+    needs: [changes, shared]
+    if: needs.changes.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.3
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: ${{ runner.os }}-turbo-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-turbo-
+      - name: Run Quality Gate
+        run: pnpm --filter @fono/mobile lint && pnpm --filter @fono/mobile typecheck && pnpm --filter @fono/mobile test
+
+  ci-status:
+    name: CI Quality Gate Status
+    needs: [security, shared, web, api, mobile]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Evaluate status
+        run: |
+          if [[ "${{ needs.security.result }}" =~ ^(failure|cancelled)$ ]] || \
+             [[ "${{ needs.shared.result }}" =~ ^(failure|cancelled)$ ]] || \
+             [[ "${{ needs.web.result }}" =~ ^(failure|cancelled)$ ]] || \
+             [[ "${{ needs.api.result }}" =~ ^(failure|cancelled)$ ]] || \
+             [[ "${{ needs.mobile.result }}" =~ ^(failure|cancelled)$ ]]; then
+            echo "CI falhou em um dos jobs obrigatórios."
+            exit 1
+          fi
+          echo "Todos os pipelines executados com sucesso!"

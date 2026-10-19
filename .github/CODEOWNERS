@@ -1,0 +1,5 @@
+# Codeowners do Projeto Fono
+* @Diasszx
+/packages/shared/ @Diasszx
+/apps/api/prisma/ @Diasszx
+/.specify/memory/constitution.md @Diasszx

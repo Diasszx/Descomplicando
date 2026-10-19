@@ -1,24 +1,18 @@
 <!--
 Sync Impact Report:
-- Version change: 1.0.0 → 2.0.0 (MAJOR: princípios redefinidos; escopo passou de front-end
-  genérico para monorepo full-stack com requisitos de segurança e dados de saúde)
+- Version change: 2.0.0 → 2.1.0 (MINOR: inclusão oficial de `apps/mobile` com Expo/React Native na
+  arquitetura do monorepo, na stack tecnológica oficial, no pipeline de CI/CD e nos contratos
+  compartilhados; adição de guardrails de segurança e boas práticas para o Agente Mobile)
 - Modified principles:
-  - I. Componentização Modular e Responsabilidade Única (SOLID)
-    → I. Monorepo e Contratos Compartilhados (Single Source of Truth)
-  - II. Tipagem Forte e Segurança Estrita (TypeScript Zero-Any)
-    → II. Tipagem Estrita de Ponta a Ponta (TypeScript Zero-Any) [mantido, escopo ampliado]
-  - III. Test-First e Confiabilidade (TDD & Testes de Integração)
-    → III. Segurança em Profundidade e Menor Privilégio
-  - IV. Consistência Visual e Acessibilidade (shadcn/ui & Tailwind CSS)
-    → IV. Test-First e Qualidade Automatizada (CI/CD)
-  - V. Camada de Serviços, Resiliência e Gestão de Estados
-    → V. Frontend Feature-based, Acessível e Resiliente
-  - Novo: VI. Integridade de Dados, Backups e Observabilidade
-- Added sections: Stack Tecnológica Oficial; Guardrails de Agentes (Frontend e Backend & Database)
-- Removed sections: Padrões de Arquitetura e Engenharia Front-end;
-  Fluxo de Desenvolvimento, Validação e Critérios de Qualidade (conteúdo absorvido)
-- Follow-up TODOs: nenhum (estado de "Sucesso" passa a ser o render normal; apenas Loading,
-  Empty e Error são obrigatórios explicitamente)
+  - I. Monorepo e Contratos Compartilhados: adicionado `apps/mobile` (React Native + Expo) ao lado
+    de `apps/web` e `apps/api` consumindo `packages/shared`.
+  - IV. Test-First e Qualidade Automatizada (CI/CD): compilação e testes de `apps/mobile` integrados
+    ao pipeline obrigatório.
+- Added sections:
+  - Stack Tecnológica Oficial: entrada dedicada para `apps/mobile`.
+  - Guardrails de Agentes: nova subseção `Agente Mobile (apps/mobile)`.
+- Removed sections: N/A
+- Follow-up TODOs: nenhum.
 -->
 
 # Projeto Fono Constitution
@@ -30,12 +24,14 @@ Plataforma de acompanhamento e exercícios fonoaudiológicos, estruturada como m
 
 ### I. Monorepo e Contratos Compartilhados (Single Source of Truth)
 O repositório MUST seguir a estrutura:
-- `apps/web`: Frontend em React + Tailwind CSS + shadcn/ui.
+- `apps/web`: Frontend Web em React + Tailwind CSS + shadcn/ui.
 - `apps/api`: Backend em Node.js + NestJS + Prisma ORM.
-- `packages/shared`: contratos, DTOs e schemas **Zod** compartilhados entre Frontend e Backend.
+- `apps/mobile`: Frontend Mobile em React Native + Expo + Expo Router.
+- `packages/shared`: contratos, DTOs e schemas **Zod** compartilhados entre Web, API e Mobile.
 
-Todo contrato de dados MUST ser definido em `packages/shared` e consumido por ambas as
-aplicações. É PROIBIDO duplicar schemas ou tipos de contrato dentro de `apps/web` ou `apps/api`.
+Todo contrato de dados MUST ser definido em `packages/shared` e consumido pelas três aplicações.
+É PROIBIDO duplicar schemas ou tipos de contrato dentro de `apps/web`, `apps/api` ou `apps/mobile`.
+Apps MUST NOT importar código diretamente de outros apps.
 
 ### II. Tipagem Estrita de Ponta a Ponta (TypeScript Zero-Any)
 O uso de `any` é PROIBIDO. Props, payloads, respostas de API e entidades MUST possuir tipos
@@ -51,9 +47,9 @@ explícitos, preferencialmente inferidos dos schemas Zod. Dados de origem incert
   No primeiro acesso/cadastro, o fluxo MUST passar por `POST /auth/sync`, vinculando o
   `firebase_uid` ao registro da tabela `users`.
 - **MFA e sessão:** MFA é obrigatório para `PROFISSIONAL` e `ADMIN` (opcional para `PACIENTE`).
-  O frontend MUST expirar a sessão após 30 minutos de inatividade. O backend MUST validar o
-  ID Token via Firebase Admin SDK com `checkRevoked: true`.
-- **RBAC e escopo de dados:** decisões de autorização MUST NOT confiar em payloads do frontend.
+  O frontend (web e mobile) MUST expirar a sessão após 30 minutos de inatividade. O backend MUST
+  validar o ID Token via Firebase Admin SDK com `checkRevoked: true`.
+- **RBAC e escopo de dados:** decisões de autorização MUST NOT confiar em payloads do cliente.
   Todo endpoint MUST usar `FirebaseAuthGuard` + `RolesGuard`. Toda query ou mutação Prisma
   envolvendo dados de pacientes ou exercícios MUST filtrar pelo `userId`/`profissionalId`
   extraído do token validado (`@CurrentUser()`), prevenindo IDOR.
@@ -69,28 +65,32 @@ explícitos, preferencialmente inferidos dos schemas Zod. Dados de origem incert
 ### IV. Test-First e Qualidade Automatizada (CI/CD)
 Regras de negócio e regras de autorização MUST ser desenvolvidas com testes escritos antes ou
 junto da implementação. Todo Pull Request MUST passar pelo pipeline do GitHub Actions:
-1. `lint`: ESLint + checagem de tipos TypeScript.
-2. `build`: compilação de `packages/shared`, `apps/api` e `apps/web`.
-3. `test`: Vitest/Jest para Services e Schemas; Supertest para integração validando
-   `403 Forbidden` entre perfis e o isolamento por `profissionalId`.
+1. `lint`: ESLint + checagem de tipos TypeScript em todos os workspaces afetados.
+2. `build`: compilação de `packages/shared`, `apps/api`, `apps/web` e export/typecheck de `apps/mobile`.
+3. `test`: Vitest/Jest para Services e Schemas; Jest/jest-expo para componentes e hooks mobile;
+   Supertest para integração validando `403 Forbidden` entre perfis e o isolamento por `profissionalId`.
 4. `migrations`: validação e aplicação controlada do schema Prisma.
 
 Nenhum merge MUST ocorrer com o pipeline falhando.
 
 ### V. Frontend Feature-based, Acessível e Resiliente
-- **Arquitetura:** organização estritamente feature-based em `src/features/<dominio>/`
+- **Arquitetura Web (`apps/web`):** organização estritamente feature-based em `src/features/<dominio>/`
   (`components/`, `hooks/`, `pages/`). `src/components/ui/` é exclusivo para primitivos
   shadcn/ui e `src/lib/` para configuração de Axios e Firebase.
-- **Design system:** fonte `Inter` (sans-serif); variáveis CSS do shadcn/ui com paleta clínica
-  (primária Azul/Teal); suporte a Light/Dark mode; conformidade **WCAG AA** usando primitivos
-  Radix do shadcn/ui.
+- **Arquitetura Mobile (`apps/mobile`):** organização feature-based em `src/features/<dominio>/`
+  (`components/`, `hooks/`), `src/app/` para rotas Expo Router e `src/lib/` para Axios e Firebase.
+- **Design system e acessibilidade:**
+  - Web: fonte `Inter` (sans-serif); variáveis CSS do shadcn/ui com paleta clínica (primária Azul/Teal);
+    suporte a Light/Dark mode; conformidade **WCAG AA** usando primitivos Radix do shadcn/ui.
+  - Mobile: componentes acessíveis com labels adequadas (`accessibilityLabel`, `accessibilityRole`),
+    suporte a fontes dinâmicas do sistema e contraste clínico padronizado.
 - **Integração:** chamadas HTTP MUST ser encapsuladas em instâncias Axios com interceptors que
   injetam o Firebase ID Token e consumidas via custom hooks do **TanStack Query**.
 - **Estados:** toda tela ou componente assíncrono MUST implementar explicitamente **Loading**
-  (`Skeleton`), **Empty** (`EmptyState` padronizado) e **Error** (Toast / `ErrorBoundary`).
+  (`Skeleton` ou indicador nativo), **Empty** (`EmptyState` padronizado) e **Error** (Toast / `ErrorBoundary`).
 - **Componentes:** pequenos, de responsabilidade única e reutilizáveis (SOLID); lógica de estado
   e efeitos complexos MUST ser extraída para hooks.
-- **Formulários:** MUST usar `react-hook-form` + schema Zod importado de `packages/shared`.
+- **Formulários:** MUST usar validação com schema Zod importado de `packages/shared`.
 
 ### VI. Integridade de Dados, Backups e Observabilidade
 - **Modelagem:** PostgreSQL gerenciado em nuvem via Prisma ORM. Mídias pesadas (áudio/vídeo de
@@ -104,8 +104,10 @@ Nenhum merge MUST ocorrer com o pipeline falhando.
 
 ## Stack Tecnológica Oficial
 
-- **Frontend (`apps/web`):** React, TypeScript, Tailwind CSS, shadcn/ui, React Router,
+- **Frontend Web (`apps/web`):** React, TypeScript, Tailwind CSS, shadcn/ui, React Router,
   React Hook Form + Zod, TanStack Query, Axios, Lucide Icons, ESLint.
+- **Frontend Mobile (`apps/mobile`):** React Native, Expo, Expo Router, TypeScript,
+  TanStack Query, Axios, Lucide Icons (lucide-react-native), `jest-expo`, ESLint.
 - **Backend (`apps/api`):** Node.js, TypeScript, NestJS, Prisma ORM, `nestjs-zod`,
   `firebase-admin`, `@nestjs/throttler`, `helmet`.
 - **Observabilidade:** NestJS Observe + Axiom.
@@ -116,7 +118,7 @@ explícito de complexidade no plano da feature.
 
 ## Guardrails de Agentes
 
-### Agente Frontend (`apps/web`)
+### Agente Frontend Web (`apps/web`)
 - **NUNCA** realizar chamadas `axios` ou `fetch` diretamente em componentes React; usar sempre
   hooks do TanStack Query.
 - **NUNCA** armazenar tokens de sessão, chaves privadas ou permissões críticas (`role`) em
@@ -124,6 +126,16 @@ explícito de complexidade no plano da feature.
 - **NUNCA** criar formulários sem `react-hook-form` + schema Zod de `packages/shared`.
 - **NUNCA** sobrescrever estilos globais fora do padrão utilitário do Tailwind CSS ou quebrar
   atributos de acessibilidade (`aria-*`) dos componentes shadcn/ui.
+
+### Agente Frontend Mobile (`apps/mobile`)
+- **NUNCA** armazenar tokens de sessão, tokens de refresh ou chaves sensíveis em `AsyncStorage` comum —
+  utilizar obrigatoriamente armazenamento seguro encriptado nativo (`expo-secure-store`).
+- **NUNCA** realizar chamadas `axios` ou `fetch` diretamente em componentes visuais; usar sempre hooks
+  encapsulados do TanStack Query.
+- **NUNCA** criar formulários ou telas de mutação sem validação atrelada ao schema Zod de `packages/shared`.
+- **NUNCA** ignorar acessibilidade nativa — configurar obrigatoriamente `accessible={true}`,
+  `accessibilityLabel`, `accessibilityRole` e garantir contraste adequado e suporte a texto redimensionável.
+- **NUNCA** importar código diretamente de `apps/web` ou `apps/api`.
 
 ### Agente Backend & Database (`apps/api` e `packages/shared`)
 - **Arquitetura:** modular NestJS (`Controller` → `Service` → `PrismaService`). Todo endpoint
@@ -161,4 +173,4 @@ Esta Constituição é a autoridade suprema de engenharia, segurança e arquitet
 4. **Revisão de conformidade:** guardrails de agentes MUST ser respeitados por qualquer agente
    automatizado; exceções exigem autorização humana explícita registrada no PR.
 
-**Version**: 2.0.0 | **Ratified**: 2026-10-19 | **Last Amended**: 2026-10-19
+**Version**: 2.1.0 | **Ratified**: 2026-10-19 | **Last Amended**: 2026-10-19
