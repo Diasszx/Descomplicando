@@ -11,8 +11,8 @@ export const ApiEnvSchema = z
       .regex(/^postgres(ql)?:\/\//, 'DATABASE_URL deve iniciar com postgresql:// ou postgres://')
       .default('postgresql://postgres:postgres@localhost:5432/fono?schema=public'),
     CORS_ORIGINS: z.string().min(1).default('http://localhost:5173,http://localhost:8081'),
-    AXIOM_TOKEN: z.string().min(1).optional(),
-    AXIOM_DATASET: z.string().min(1).optional(),
+    AXIOM_TOKEN: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).optional()),
+    AXIOM_DATASET: z.preprocess((v) => (v === '' ? undefined : v), z.string().min(1).optional()),
   })
   .superRefine((data, ctx) => {
     if (data.NODE_ENV === 'production') {
