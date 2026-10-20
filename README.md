@@ -65,3 +65,13 @@ Todos os comandos são executados a partir da raiz através do **Turborepo**:
 - **Zero-Any**: Todas as propriedades, contratos e retornos são fortemente tipados.
 - **Defesa em Profundidade**: O backend implementa `helmet`, CORS com allowlist, rate limiting via `@nestjs/throttler` e logger estruturado com sanitização automática de dados sensíveis.
 - **Prevenção de Migrations Destrutivas**: A pipeline bloqueia automaticamente qualquer migration SQL contendo `DROP TABLE`, `DROP COLUMN` ou `TRUNCATE` sem autorização explícita via label de Pull Request.
+
+
+## Deploy no Render + Neon (PostgreSQL Serverless)
+
+O ambiente de testes/produção utiliza **Neon** (PostgreSQL 16 Serverless gratuito) e **Render** (`fono-api` como Web Service Node.js e `fono-web` como Static Site gratuito com CDN global e SPA rewrite), configurados declarativamente via [`render.yaml`](render.yaml).
+
+### Passo a passo rápido:
+1. Crie um banco no **[Neon](https://neon.tech)** e copie a `DATABASE_URL` (`?sslmode=require`).
+2. No **[Render](https://dashboard.render.com)**, clique em **New → Blueprint** e conecte este repositório.
+3. Preencha `DATABASE_URL`, `CORS_ORIGINS` (URL do `fono-web`, ex.: `https://fono-web.onrender.com`) e `VITE_API_URL` (URL do `fono-api`, ex.: `https://fono-api.onrender.com`).

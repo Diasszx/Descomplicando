@@ -1,0 +1,55 @@
+# ==============================================================================
+# Render Blueprint — Projeto Fono (API + Web) integrado com Neon PostgreSQL
+# Documentação: https://render.com/docs/blueprint-spec
+# ==============================================================================
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Backend API (NestJS + Prisma ORM) — Web Service (Free Tier suportado)
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: fono-api
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @fono/shared build && pnpm --filter @fono/api db:generate && pnpm --filter @fono/api build && pnpm --filter @fono/api db:migrate:deploy
+    startCommand: node apps/api/dist/main.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false # Cole aqui a Connection String (Pooled + ?sslmode=require) do Neon
+      - key: CORS_ORIGINS
+        sync: false # Ex: https://fono-web.onrender.com
+      - key: AXIOM_DATASET
+        value: fono-prod-logs
+      - key: AXIOM_TOKEN
+        sync: false # Opcional: Token de ingestão do Axiom
+
+  # ----------------------------------------------------------------------------
+  # 2. Frontend Web (React + Vite SPA) — Static Site (100% Gratuito c/ CDN Global)
+  # ----------------------------------------------------------------------------
+  - type: web
+    name: fono-web
+    runtime: static
+    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @fono/shared build && pnpm --filter @fono/web build
+    staticPublishPath: apps/web/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+    envVars:
+      - key: VITE_API_URL
+        sync: false # Ex: https://fono-api.onrender.com
