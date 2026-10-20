@@ -12,8 +12,8 @@ services:
     plan: free
     region: oregon
     autoDeployTrigger: checksPass
-    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @fono/shared build && pnpm --filter @fono/api db:generate && pnpm --filter @fono/api build && pnpm --filter @fono/api db:migrate:deploy
-    startCommand: node apps/api/dist/main.js
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @fono/shared build && pnpm --filter @fono/api db:generate && pnpm --filter @fono/api build && pnpm --filter @fono/api db:migrate:deploy
+    startCommand: node apps/api/dist/src/main.js
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -36,7 +36,7 @@ services:
     name: fono-web
     runtime: static
     autoDeployTrigger: checksPass
-    buildCommand: pnpm install --frozen-lockfile && pnpm --filter @fono/shared build && pnpm --filter @fono/web build
+    buildCommand: pnpm install --frozen-lockfile --prod=false && pnpm --filter @fono/shared build && pnpm --filter @fono/web build
     staticPublishPath: apps/web/dist
     routes:
       - type: rewrite
