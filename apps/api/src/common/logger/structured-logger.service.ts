@@ -1,4 +1,4 @@
-import { Injectable, LoggerService } from '@nestjs/common';
+import { Injectable, LoggerService, Optional } from '@nestjs/common';
 
 const SENSITIVE_KEYS = new Set([
   'password',
@@ -10,7 +10,25 @@ const SENSITIVE_KEYS = new Set([
   'authorization',
   'cookie',
   'creditcard',
+  'database_url',
+  'axiom_token',
 ]);
+
+type CloudLoggingSeverity = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR';
+
+const SEVERITY_MAP: Record<string, CloudLoggingSeverity> = {
+  verbose: 'DEBUG',
+  debug: 'DEBUG',
+  info: 'INFO',
+  warn: 'WARNING',
+  error: 'ERROR',
+};
+
+export interface StructuredLoggerOptions {
+  axiomToken?: string | undefined;
+  axiomDataset?: string | undefined;
+  fetchImpl?: typeof fetch | undefined;
+}
 
 function maskSensitiveData(obj: unknown): unknown {
   if (typeof obj !== 'object' || obj === null) {
@@ -36,14 +54,60 @@ function maskSensitiveData(obj: unknown): unknown {
 
 @Injectable()
 export class StructuredLoggerService implements LoggerService {
-  private formatMessage(level: string, message: unknown, context?: string, ...optionalParams: unknown[]) {
-    const logEntry = {
+  private readonly axiomToken: string | undefined;
+  private readonly axiomDataset: string | undefined;
+  private readonly fetchImpl: typeof fetch;
+
+  constructor(@Optional() options?: StructuredLoggerOptions) {
+    this.axiomToken = options?.axiomToken ?? process.env.AXIOM_TOKEN;
+    this.axiomDataset = options?.axiomDataset ?? process.env.AXIOM_DATASET;
+    this.fetchImpl = options?.fetchImpl ?? globalThis.fetch;
+  }
+
+  private buildLogEntry(
+    level: string,
+    message: unknown,
+    context?: string,
+    ...optionalParams: unknown[]
+  ): Record<string, unknown> {
+    return {
       timestamp: new Date().toISOString(),
       level,
+      severity: SEVERITY_MAP[level] ?? 'INFO',
       context: context || 'Application',
       message: typeof message === 'string' ? message : maskSensitiveData(message),
       extra: optionalParams.length > 0 ? maskSensitiveData(optionalParams) : undefined,
     };
+  }
+
+  private dispatchToAxiom(entry: Record<string, unknown>): void {
+    if (!this.axiomToken || !this.axiomDataset || typeof this.fetchImpl !== 'function') {
+      return;
+    }
+
+    const url = `https://api.axiom.co/v1/datasets/${encodeURIComponent(this.axiomDataset)}/ingest`;
+    void Promise.resolve(
+      this.fetchImpl(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.axiomToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify([entry]),
+      }),
+    ).catch(() => {
+      // Falha silenciosa de telemetria externa para nunca interromper o fluxo da API
+    });
+  }
+
+  private formatMessage(
+    level: string,
+    message: unknown,
+    context?: string,
+    ...optionalParams: unknown[]
+  ): string {
+    const logEntry = this.buildLogEntry(level, message, context, ...optionalParams);
+    this.dispatchToAxiom(logEntry);
     return JSON.stringify(logEntry);
   }
 

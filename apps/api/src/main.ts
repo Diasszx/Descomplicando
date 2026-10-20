@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { StructuredLoggerService } from './common/logger/structured-logger.service';
+import { env } from './config/env';
 
 async function bootstrap() {
   const logger = new StructuredLoggerService();
@@ -9,20 +10,30 @@ async function bootstrap() {
     logger,
   });
 
+  app.enableShutdownHooks();
   app.use(helmet());
 
-  const allowedOrigins = process.env.CORS_ORIGINS
-    ? process.env.CORS_ORIGINS.split(',').map((origin) => origin.trim())
-    : ['http://localhost:5173', 'http://localhost:8081'];
+  const allowedOrigins = env.CORS_ORIGINS.split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
   app.enableCors({
-    origin: allowedOrigins,
+    origin: (
+      origin: string | undefined,
+      callback: (err: Error | null, allow?: boolean) => void,
+    ) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(null, false);
+      }
+    },
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
 
-  const port = process.env.PORT || 3000;
-  await app.listen(port);
+  const port = Number(env.PORT) || 3000;
+  await app.listen(port, '0.0.0.0');
   logger.log(`Servidor API escutando na porta ${port}`, 'Bootstrap');
 }
 

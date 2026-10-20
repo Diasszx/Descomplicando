@@ -33,6 +33,7 @@ describe('useHealth hook (web)', () => {
       service: '@fono/api',
       version: '0.1.0',
       timestamp: new Date().toISOString(),
+      database: 'up',
     };
 
     mockedGet.mockResolvedValueOnce({ data: mockHealth });
@@ -45,6 +46,7 @@ describe('useHealth hook (web)', () => {
 
     expect(result.current.data?.status).toBe('ok');
     expect(result.current.data?.service).toBe('@fono/api');
+    expect(result.current.data?.database).toBe('up');
   });
 
   it('deve falhar quando a API retornar payload inválido', async () => {

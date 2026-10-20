@@ -39,27 +39,55 @@ jobs:
         with:
           fetch-depth: 2
 
-      - name: Setup Node & pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.3
-
-      - name: Use Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
       - name: Check affected packages
         id: filter
         run: |
-          echo "shared=true" >> "$GITHUB_OUTPUT"
-          echo "web=true" >> "$GITHUB_OUTPUT"
-          echo "api=true" >> "$GITHUB_OUTPUT"
-          echo "mobile=true" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE_SHA="${{ github.event.before }}"
+          fi
+
+          if [ -z "$BASE_SHA" ] || [ "$BASE_SHA" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BASE_SHA^{commit}" 2>/dev/null; then
+            echo "shared=true" >> "$GITHUB_OUTPUT"
+            echo "web=true" >> "$GITHUB_OUTPUT"
+            echo "api=true" >> "$GITHUB_OUTPUT"
+            echo "mobile=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "${{ github.sha }}")
+          echo "Arquivos alterados:"
+          echo "$CHANGED_FILES"
+
+          SHARED="false"
+          WEB="false"
+          API="false"
+          MOBILE="false"
+
+          if echo "$CHANGED_FILES" | grep -qE '^(packages/|package\.json|pnpm-lock\.yaml|turbo\.json|\.github/workflows/)'; then
+            SHARED="true"
+            WEB="true"
+            API="true"
+            MOBILE="true"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -qE '^apps/web/'; then
+            WEB="true"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -qE '^apps/api/'; then
+            API="true"
+          fi
+
+          if echo "$CHANGED_FILES" | grep -qE '^apps/mobile/'; then
+            MOBILE="true"
+          fi
+
+          echo "shared=$SHARED" >> "$GITHUB_OUTPUT"
+          echo "web=$WEB" >> "$GITHUB_OUTPUT"
+          echo "api=$API" >> "$GITHUB_OUTPUT"
+          echo "mobile=$MOBILE" >> "$GITHUB_OUTPUT"
 
   shared:
     name: Shared Package Pipeline
@@ -79,7 +107,9 @@ jobs:
       - name: Cache Turbo
         uses: actions/cache@v4
         with:
-          path: .turbo
+          path: |
+            .turbo
+            packages/shared/dist
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
             ${{ runner.os }}-turbo-
@@ -101,13 +131,8 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - name: Cache Turbo
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: ${{ runner.os }}-turbo-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-turbo-
+      - name: Build Shared Contracts
+        run: pnpm --filter @fono/shared build
       - name: Run Quality Gate
         run: pnpm --filter @fono/web lint && pnpm --filter @fono/web typecheck && pnpm --filter @fono/web test && pnpm --filter @fono/web build
 
@@ -140,13 +165,8 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - name: Cache Turbo
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: ${{ runner.os }}-turbo-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-turbo-
+      - name: Build Shared Contracts & Generate Prisma Client
+        run: pnpm --filter @fono/shared build && pnpm --filter @fono/api db:generate
       - name: Check destructive migrations
         run: pnpm --filter @fono/api db:validate
         env:
@@ -172,13 +192,8 @@ jobs:
           node-version: 22
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - name: Cache Turbo
-        uses: actions/cache@v4
-        with:
-          path: .turbo
-          key: ${{ runner.os }}-turbo-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-turbo-
+      - name: Build Shared Contracts
+        run: pnpm --filter @fono/shared build
       - name: Run Quality Gate
         run: pnpm --filter @fono/mobile lint && pnpm --filter @fono/mobile typecheck && pnpm --filter @fono/mobile test
 

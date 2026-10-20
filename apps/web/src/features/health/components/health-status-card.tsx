@@ -79,6 +79,12 @@ export function HealthStatusCard() {
           <span className="text-muted-foreground">Versão:</span>
           <span className="font-mono">{data.version}</span>
         </div>
+        {data.database && (
+          <div className="flex justify-between border-b pb-2" data-testid="health-database-status">
+            <span className="text-muted-foreground">Banco de Dados:</span>
+            <span className="font-mono uppercase">{data.database}</span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span className="text-muted-foreground">Último ping:</span>
           <span className="font-mono text-xs">{new Date(data.timestamp).toLocaleTimeString()}</span>

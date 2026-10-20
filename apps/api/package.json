@@ -9,7 +9,9 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:e2e": "jest --config ./test/jest-e2e.json",
-    "db:validate": "prisma validate"
+    "db:validate": "prisma validate",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "db:generate": "prisma generate"
   },
   "dependencies": {
     "@fono/shared": "workspace:*",
