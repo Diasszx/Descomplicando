@@ -1,6 +1,11 @@
-# Manual de Operação dos Agentes — Projeto Fono
+# Manual de Operação dos Agentes — FonoGames
 
-Este documento consolida a estrutura, responsabilidades e os **guardrails de segurança** implementados no ambiente de desenvolvimento com base no **Manual Técnico — Projeto Fono**.
+Este documento consolida a estrutura, responsabilidades e os **guardrails de segurança** implementados no ambiente de desenvolvimento com base na **Constituição da FonoGames** e no Manual Técnico.
+
+### Modelos de Atuação e Perfis
+- **Modelo Fonoaudiológico:** Gestão clínica de pacientes, prescrição de jogos terapêuticos e comutação de contexto (perfil de teste próprio do fonoaudiólogo vs contexto do paciente selecionado para gravação direta no prontuário).
+- **Modelo Autônomo:** Uso por pessoa comum com acesso ao catálogo completo de jogos e progresso pessoal, sem permissões clínicas.
+- **Perfis Oficiais:** `ADMIN`, `PROFISSIONAL`, `PACIENTE` e `AUTONOMO`.
 
 ---
 
@@ -17,12 +22,19 @@ Este documento consolida a estrutura, responsabilidades e os **guardrails de seg
 ---
 
 ## 2. Especialista Front-end (`fono-frontend-specialist`)
-* **Referência:** **Seção 6.1 do Manual Técnico**
+* **Referência:** **Seção 6.1 do Manual Técnico** e Skill canônica [`fono-ui-design-system`](file:///.agents/skills/fono-ui-design-system/SKILL.md).
 * **Escopo:** `apps/web` (React + Vite) e `apps/mobile` (React Native).
+* **Identidade Visual Oficial (Dashboard & Cards):**
+  * **Estrutura Base (Layout Geral):** Fundo suave em off-white (`slate-50`), Sidebar com botões em formato de pílula arredondada (item ativo em tom pastel amarelo/âmbar suave), e cabeçalho com Overview, sininho de notificações e 4 cartões horizontais de métricas/KPIs (Em andamento, Concluídos, Categorias, Conquistas).
+  * **Cards de Exercícios/Jogos (Padrão Banner Ilustrado + Hover Dinâmico):**
+    * Substituição obrigatória dos antigos cards brancos planos pelos cards com **banner superior ilustrado e temático** (gradientes vibrantes: rosa/coral, verde menta, roxo, azul royal e âmbar).
+    * Borda externa `rounded-3xl` (24px) com contêiner interno do banner em `rounded-2xl` (16px).
+    * Rodapé do card contendo título em negrito, contagem de atividades/exercícios e botão circular de ação em Teal com ícone de Play.
+    * **Efeito Hover Obrigatório:** Elevação suave do card (`-translate-y-2`), expansão de sombra tridimensional (`shadow-xl`), leve zoom na ilustração interna (`scale-108`) e destaque escalonado no botão de Play.
 * **Padrões de Interface:**
-  * Paleta clínica em tons **Azul/Teal** via variáveis CSS, com suporte a **Light/Dark mode**.
+  * Paleta clínica e amigável em tons **Azul/Teal e acentos temáticos** via variáveis CSS e classes Tailwind.
   * Tipografia oficial: `Inter`.
-  * Acessibilidade: Conformidade rigorosa com **WCAG AA** (contraste, foco visível, navegação por teclado).
+  * Acessibilidade: Conformidade rigorosa com **WCAG AA** (contraste, foco visível com `focus-visible:ring-2`, navegação por teclado e leitor de telas).
   * Arquitetura **Feature-based** (`src/features/<dominio>/`).
   * Tratamento obrigatório dos 3 estados visuais em requisições assíncronas:
     * **Loading:** `Skeleton` estrutural.
@@ -33,6 +45,8 @@ Este documento consolida a estrutura, responsabilidades e os **guardrails de seg
   * ❌ **NUNCA** confiar em permissões (`role`), `userId` ou tokens salvos em `localStorage`/`sessionStorage` para segurança real.
   * ❌ **NUNCA** criar formulários fora do padrão `react-hook-form` + schema Zod compartilhado (`packages/shared`).
   * ❌ **NUNCA** remover atributos de acessibilidade (`aria-*`) dos primitivos Radix UI/shadcn.
+  * ❌ **NUNCA** criar cards de jogos como caixas cinzas estáticas — aplicar obrigatoriamente o componente com banner ilustrado e micro-interação de hover.
+  * ❌ **NUNCA** exibir propagandas, anúncios de terceiros ou textos de monetização do tipo "sem anúncios" / "remova propagandas" — a plataforma é de saúde e 100% livre de publicidade. Toda comunicação de planos Pro/Clínicos deve enfatizar recursos clínicos (prontuários ilimitados, relatórios com IA e acompanhamento terapêutico).
 
 ---
 

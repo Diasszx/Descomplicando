@@ -1,176 +1,211 @@
 <!--
 Sync Impact Report:
-- Version change: 2.0.0 → 2.1.0 (MINOR: inclusão oficial de `apps/mobile` com Expo/React Native na
-  arquitetura do monorepo, na stack tecnológica oficial, no pipeline de CI/CD e nos contratos
-  compartilhados; adição de guardrails de segurança e boas práticas para o Agente Mobile)
+- Version change: 2.2.0 → 2.3.0 (MINOR: consolidação oficial da especificação canônica da FonoGames,
+  incorporando a arquitetura dos dois modelos de utilização — Modelo Fonoaudiológico e Modelo Autônomo —,
+  a especificação dos 4 perfis de usuário com comutação de contexto clínico no fonoaudiólogo, e a
+  formalização detalhada dos requisitos de Segurança, Banco de Dados, Backend, Frontend, Stack Oficial
+  e Guardrails de Agentes).
 - Modified principles:
-  - I. Monorepo e Contratos Compartilhados: adicionado `apps/mobile` (React Native + Expo) ao lado
-    de `apps/web` e `apps/api` consumindo `packages/shared`.
-  - IV. Test-First e Qualidade Automatizada (CI/CD): compilação e testes de `apps/mobile` integrados
-    ao pipeline obrigatório.
+  - III. Segurança em Profundidade e Menor Privilégio: expansão dos requisitos de segurança de rede
+    (HTTPS + helmet), MFA por perfil, sanitização de inputs, prevenção estrita de SQLi, política de
+    segredos e DRP (RPO 24h, RTO 4h).
+  - V. Frontend Feature-based, Identidade Visual e Zero Anúncios: incorporação dos requisitos de interface
+    para ambos os modelos de uso, estados visuais obrigatórios e diretriz estrita de zero publicidade.
+  - VI. Integridade de Dados, Migrations e Backups: formalização da separação Firebase Auth vs PostgreSQL,
+    sincronização via POST /auth/sync e proibição de comandos destrutivos.
 - Added sections:
-  - Stack Tecnológica Oficial: entrada dedicada para `apps/mobile`.
-  - Guardrails de Agentes: nova subseção `Agente Mobile (apps/mobile)`.
+  - Modelos de Utilização e Perfis de Acesso (Visão Geral, Modelo Fonoaudiológico vs Autônomo,
+    e detalhamento de ADMIN, PROFISSIONAL, PACIENTE e AUTONOMO).
+  - Princípio VII: Observabilidade e Monitoramento Seguro (NestJS Observe + Axiom).
 - Removed sections: N/A
 - Follow-up TODOs: nenhum.
 -->
 
-# Projeto Fono Constitution
+# FonoGames Constitution
 
-Plataforma de acompanhamento e exercícios fonoaudiológicos, estruturada como monorepo
-(Turborepo / pnpm workspaces) com TypeScript estrito de ponta a ponta.
+Plataforma de apoio à intervenção fonoaudiológica que utiliza jogos digitais e gamificação como
+recursos complementares, estruturada como monorepo (Turborepo / pnpm workspaces) com TypeScript
+estrito de ponta a ponta.
+
+---
+
+## Modelos de Utilização e Perfis de Acesso
+
+### Modelos de Utilização
+1. **Modelo Fonoaudiológico (Clínico):**
+   * O fonoaudiólogo gerencia seus pacientes, prescreve jogos específicos e acompanha o progresso clínico.
+   * **Perfil de Teste Automático:** O fonoaudiólogo possui um perfil próprio criado automaticamente no cadastro para jogar livremente qualquer atividade sem poluir o prontuário dos pacientes.
+   * **Contexto do Paciente Selecionado:** Ao selecionar um paciente na lista, o profissional entra no contexto clínico deste paciente; qualquer jogo executado nessa sessão grava as métricas e o histórico diretamente no prontuário do paciente selecionado.
+2. **Modelo de Uso Autônomo (Pessoa Comum):**
+   * O usuário cria sua própria conta de forma independente.
+   * Acessa um painel individual contendo seu perfil, catálogo completo e livre de jogos e dashboard de progresso pessoal.
+   * Não possui ferramentas clínicas (não cadastra pacientes nem gera credenciais para terceiros).
+
+### Perfis de Usuário (Roles)
+* **`ADMIN` (Gestor do Sistema):** Responsável por gerenciar os cadastros globais de conteúdo base (áreas terapêuticas, habilidades, objetivos clínicos, exercícios e jogos) e administrar contas de profissionais. MFA obrigatório.
+* **`PROFISSIONAL` (Fonoaudiólogo):** Possui perfil individual automático para testes livres, gerencia pacientes, prescreve jogos conforme o plano terapêutico e alterna para o contexto do paciente para registro clínico de sessões. MFA obrigatório.
+* **`PACIENTE`:** Acessa a plataforma com credenciais geradas pelo fonoaudiólogo; visualiza e executa exclusivamente os jogos liberados em seu plano terapêutico; personaliza avatar e acompanha seu desempenho em dashboard simples. Em menores de idade, o responsável legal utiliza essas credenciais para acompanhamento doméstico. MFA opcional.
+* **`AUTONOMO` (Usuário Autônomo):** Usuário comum com acesso ao catálogo completo de jogos e métricas de desempenho pessoal, sem permissões clínicas. MFA opcional.
+
+---
 
 ## Core Principles
 
 ### I. Monorepo e Contratos Compartilhados (Single Source of Truth)
-O repositório MUST seguir a estrutura:
-- `apps/web`: Frontend Web em React + Tailwind CSS + shadcn/ui.
-- `apps/api`: Backend em Node.js + NestJS + Prisma ORM.
+O repositório MUST seguir a arquitetura monorepo padronizada:
+- `apps/web`: Frontend Web em React + Vite + Tailwind CSS + shadcn/ui.
+- `apps/api`: Backend REST em Node.js + NestJS + Prisma ORM.
 - `apps/mobile`: Frontend Mobile em React Native + Expo + Expo Router.
 - `packages/shared`: contratos, DTOs e schemas **Zod** compartilhados entre Web, API e Mobile.
 
-Todo contrato de dados MUST ser definido em `packages/shared` e consumido pelas três aplicações.
-É PROIBIDO duplicar schemas ou tipos de contrato dentro de `apps/web`, `apps/api` ou `apps/mobile`.
-Apps MUST NOT importar código diretamente de outros apps.
+Todo contrato de dados (payloads de requisição, respostas, DTOs e validações) MUST ser definido em
+`packages/shared` e consumido pelas aplicações clientes e pelo backend. É PROIBIDO duplicar schemas
+ou tipos em `apps/web`, `apps/api` ou `apps/mobile`. Apps MUST NOT importar código diretamente entre si.
 
 ### II. Tipagem Estrita de Ponta a Ponta (TypeScript Zero-Any)
-O uso de `any` é PROIBIDO. Props, payloads, respostas de API e entidades MUST possuir tipos
-explícitos, preferencialmente inferidos dos schemas Zod. Dados de origem incerta MUST usar
-`unknown` com type guards ou validação Zod em tempo de execução.
+O uso de `any` é PROIBIDO em todos os pacotes e aplicações. Props, parâmetros, retornos de função,
+entidades e payloads MUST possuir tipos estritos e explícitos, preferencialmente inferidos dos schemas
+Zod (`z.infer<typeof schema>`). Dados de origem externa ou incerta MUST usar `unknown` combinado com
+validação Zod em tempo de execução ou type guards explícitos.
 
-### III. Segurança em Profundidade e Menor Privilégio
-- **Transporte e headers:** comunicação exclusivamente via HTTPS/TLS; `helmet` MUST estar ativo
-  no NestJS; CORS MUST permitir apenas origens, métodos e cabeçalhos explicitamente autorizados.
-- **Identidade vs. autorização:** o Firebase Authentication atua **exclusivamente** como provedor
-  de identidade (login, recuperação de senha, emissão de ID Token). O PostgreSQL é a **única
-  fonte de verdade** para permissões, perfis (`ADMIN`, `PROFISSIONAL`, `PACIENTE`) e vínculos.
-  No primeiro acesso/cadastro, o fluxo MUST passar por `POST /auth/sync`, vinculando o
-  `firebase_uid` ao registro da tabela `users`.
-- **MFA e sessão:** MFA é obrigatório para `PROFISSIONAL` e `ADMIN` (opcional para `PACIENTE`).
-  O frontend (web e mobile) MUST expirar a sessão após 30 minutos de inatividade. O backend MUST
-  validar o ID Token via Firebase Admin SDK com `checkRevoked: true`.
-- **RBAC e escopo de dados:** decisões de autorização MUST NOT confiar em payloads do cliente.
-  Todo endpoint MUST usar `FirebaseAuthGuard` + `RolesGuard`. Toda query ou mutação Prisma
-  envolvendo dados de pacientes ou exercícios MUST filtrar pelo `userId`/`profissionalId`
-  extraído do token validado (`@CurrentUser()`), prevenindo IDOR.
-- **Validação e sanitização:** payloads MUST ser validados no backend via `nestjs-zod` com os
-  schemas de `packages/shared`. Strings MUST ser normalizadas nos transforms Zod (`.trim()`,
-  remoção de tags HTML contra XSS). Concatenação de strings em SQL é PROIBIDA; MUST-se usar
-  consultas parametrizadas do Prisma Client.
-- **Rate limiting:** `@nestjs/throttler` com limite global de 100 req/min e limite estrito de
-  10 req/min em rotas sensíveis e de autenticação.
-- **Secrets:** MUST ser gerenciados via variáveis de ambiente validadas por Zod na inicialização.
-  Versionar credenciais no repositório é PROIBIDO.
+### III. Segurança em Profundidade, Menor Privilégio e Isolamento de Contexto
+- **Transporte e Cabeçalhos:** Toda comunicação em produção MUST ser estritamente via HTTPS/TLS. O NestJS
+  MUST utilizar o middleware `helmet` para configurar cabeçalhos de proteção (HSTS, CSP, X-Frame-Options).
+  CORS MUST ser configurado no `main.ts` restringindo origens, métodos HTTP e cabeçalhos autorizados.
+- **Identidade vs. Autorização:** O **Firebase Authentication** atua exclusivamente como provedor de
+  identidade (cadastro, login, redefinição de senha e emissão de ID Token). O **PostgreSQL é a única fonte
+  de verdade** para dados de negócio, permissões (`role`), vínculos clínicos e dados de jogos.
+  No primeiro acesso, o cliente MUST chamar `POST /auth/sync`, vinculando o `firebase_uid` à tabela `users`.
+- **MFA (Multi-Factor Authentication):** Obrigatório para os perfis `ADMIN` e `PROFISSIONAL`; opcional para
+  `PACIENTE` e `AUTONOMO`.
+- **Validação Centralizada e Sanitização:** Entradas MUST ser validadas por schemas Zod no frontend (via
+  React Hook Form) e no backend (via `nestjs-zod` com `ZodValidationPipe`). Sanitização contra XSS MUST ser
+  aplicada nos transforms Zod (como `.trim()` e remoção/escape de tags HTML maliciosas).
+- **Prevenção de SQL Injection (SQLi):** Consultas ao banco de dados MUST utilizar estritamente o Prisma ORM
+  com queries parametrizadas. É terminantemente PROIBIDO o uso de `$queryRawUnsafe` ou `$executeRawUnsafe`.
+- **Gerenciamento de Segredos (Secrets):** Chaves do Firebase, credenciais de banco e tokens de telemetria
+  MUST ser mantidos fora do código-fonte, configurados via variáveis de ambiente (`.env` local ignorado no Git
+  e GitHub Secrets no CI/CD) e validados por schema Zod no boot da API.
+- **Princípio do Menor Privilégio (PMP) e Prevenção de IDOR:**
+  - A API MUST validar permissões com `FirebaseAuthGuard` (com `checkRevoked: true`) e `RolesGuard`.
+  - O `userId` e o `role` do usuário autenticado MUST ser extraídos exclusivamente do PostgreSQL a partir
+    do `uid` verificado, injetados via `@CurrentUser()`.
+  - Toda operação de leitura ou escrita envolvendo pacientes, planos ou sessões MUST filtrar pelo
+    `profissionalId` do fonoaudiólogo autenticado, impedindo acesso a dados de outros profissionais.
+  - Na execução de jogos pelo fonoaudiólogo, a gravação de métricas no prontuário do paciente exige que
+    o paciente pertença comprovadamente à carteira ativa do profissional autenticado.
+- **Rate Limiting:** Implementado com `@nestjs/throttler` com limite global de 100 req/min e limite
+  estrito de 10 req/min em rotas sensíveis (autenticação, sincronização e recuperação de credenciais).
+- **Sessão:** Timeout por inatividade de 30 minutos no cliente (web e mobile), combinado com a checagem
+  de revogação de token no backend.
+- **Plano de Recuperação de Desastres (DRP):** Metas de **RPO de 24 horas** e **RTO de 4 horas**, apoiadas
+  em rotinas de backup diário automatizado do PostgreSQL gerenciado e deploy automatizado via CI/CD.
 
 ### IV. Test-First e Qualidade Automatizada (CI/CD)
-Regras de negócio e regras de autorização MUST ser desenvolvidas com testes escritos antes ou
-junto da implementação. Todo Pull Request MUST passar pelo pipeline do GitHub Actions:
-1. `lint`: ESLint + checagem de tipos TypeScript em todos os workspaces afetados.
-2. `build`: compilação de `packages/shared`, `apps/api`, `apps/web` e export/typecheck de `apps/mobile`.
-3. `test`: Vitest/Jest para Services e Schemas; Jest/jest-expo para componentes e hooks mobile;
-   Supertest para integração validando `403 Forbidden` entre perfis e o isolamento por `profissionalId`.
-4. `migrations`: validação e aplicação controlada do schema Prisma.
+Regras de negócio, contratos Zod e checagens de autorização MUST ser desenvolvidos acompanhados de
+testes automatizados. Todo Pull Request MUST passar pelas 4 etapas obrigatórias do GitHub Actions:
+1. `lint`: ESLint e checagem de tipos TypeScript (`tsc --noEmit`) em todos os workspaces.
+2. `build`: Compilação de `packages/shared`, `apps/api`, `apps/web` e typecheck/export de `apps/mobile`.
+3. `test`: Vitest/Jest para Services, DTOs e componentes; Supertest para testes de integração HTTP
+   validando respostas `403 Forbidden` em tentativas de acesso indevido ou cruzado.
+4. `migrations`: Validação e verificação de integridade das migrations do Prisma (`prisma migrate deploy`).
 
-Nenhum merge MUST ocorrer com o pipeline falhando.
+Nenhum merge MUST ser realizado caso qualquer etapa do pipeline falhe.
 
-### V. Frontend Feature-based, Acessível e Resiliente
-- **Arquitetura Web (`apps/web`):** organização estritamente feature-based em `src/features/<dominio>/`
-  (`components/`, `hooks/`, `pages/`). `src/components/ui/` é exclusivo para primitivos
-  shadcn/ui e `src/lib/` para configuração de Axios e Firebase.
-- **Arquitetura Mobile (`apps/mobile`):** organização feature-based em `src/features/<dominio>/`
-  (`components/`, `hooks/`), `src/app/` para rotas Expo Router e `src/lib/` para Axios e Firebase.
-- **Design system e acessibilidade:**
-  - Web: fonte `Inter` (sans-serif); variáveis CSS do shadcn/ui com paleta clínica (primária Azul/Teal);
-    suporte a Light/Dark mode; conformidade **WCAG AA** usando primitivos Radix do shadcn/ui.
-  - Mobile: componentes acessíveis com labels adequadas (`accessibilityLabel`, `accessibilityRole`),
-    suporte a fontes dinâmicas do sistema e contraste clínico padronizado.
-- **Integração:** chamadas HTTP MUST ser encapsuladas em instâncias Axios com interceptors que
-  injetam o Firebase ID Token e consumidas via custom hooks do **TanStack Query**.
-- **Estados:** toda tela ou componente assíncrono MUST implementar explicitamente **Loading**
-  (`Skeleton` ou indicador nativo), **Empty** (`EmptyState` padronizado) e **Error** (Toast / `ErrorBoundary`).
-- **Componentes:** pequenos, de responsabilidade única e reutilizáveis (SOLID); lógica de estado
-  e efeitos complexos MUST ser extraída para hooks.
-- **Formulários:** MUST usar validação com schema Zod importado de `packages/shared`.
+### V. Frontend Feature-based, Identidade Visual Lúdica/Clínica e Zero Anúncios
+- **Arquitetura Feature-based:** Estruturação em `src/features/<dominio>/` (`components/`, `hooks/`, `pages/`).
+  A pasta `src/components/ui/` é reservada exclusivamente para primitivos shadcn/ui e `src/lib/` para utilitários.
+- **Design System Canônico ([`fono-ui-design-system`](file:///.agents/skills/fono-ui-design-system/SKILL.md)):**
+  - **Paleta e Tipografia:** Fundo suave `#F8FAFC`, tipografia `Inter`, paleta clínica Azul/Teal com gradientes
+    temáticos vibrantes para os jogos (Rosa Coral, Esmeralda, Violeta, Azul Royal e Âmbar).
+  - **Acessibilidade:** Conformidade integral com **WCAG AA** utilizando primitivos Radix UI, contraste
+    mínimo adequado, anel de foco visível (`focus-visible:ring-2`) e suporte completo a teclado (`Tab`, `Enter`, `Space`).
+  - **Layout do Dashboard:** Sidebar com pílulas arredondadas (item ativo em tom pastel amarelo suave `#FEF7DA`),
+    cabeçalho com `Overview`, notificações e as 4 métricas chave (Em andamento, Concluídos, Categorias, Conquistas).
+  - **Cards de Jogos com Efeito Hover:** Contorno `rounded-3xl`, banner ilustrado colorido com leve zoom no
+    hover (`scale-108`), elevação suave do card (`-translate-y-2` com `shadow-xl`) e botão circular de Play
+    em Teal com animação no hover (`scale-115`).
+  - **ZERO PROPAGANDAS (Plataforma 100% Livre de Anúncios):** Por ser uma ferramenta clínica de saúde e
+    reabilitação, é expressamente PROIBIDO exibir anúncios de terceiros ou textos promocionais como
+    "remova anúncios" ou "sem anúncios". Destaques de planos Pro/Clínicos focam exclusivamente em valor
+    médico-terapêutico (relatórios avançados, prontuários, IA diagnóstica).
+- **Consumo de APIs e Estados de Interface:** Chamadas HTTP MUST ser encapsuladas em serviços Axios com
+  interceptors e consumidas via custom hooks do **TanStack Query**. Toda busca assíncrona MUST tratar
+  explicitamente os 3 estados visuais:
+  - **Loading:** `Skeleton` estrutural.
+  - **Empty:** `EmptyState` contextual com orientação.
+  - **Error:** `Toast` contextual ou `ErrorBoundary` com opção de retry.
 
-### VI. Integridade de Dados, Backups e Observabilidade
-- **Modelagem:** PostgreSQL gerenciado em nuvem via Prisma ORM. Mídias pesadas (áudio/vídeo de
-  usuários) MUST NOT ser armazenadas no banco; usar apenas links externos ou ativos estáticos.
-- **Migrations:** toda alteração estrutural MUST ser versionada via `prisma migrate`. Produção
-  MUST usar `prisma migrate deploy` de forma atômica, com scripts de rollback prontos.
-- **Backups e DRP:** backups diários automatizados com retenção definida e testes periódicos de
-  restauração. Metas: **RPO de 24h** e **RTO de 4h**.
-- **Observabilidade:** NestJS Observe (logs estruturados e métricas) + **Axiom** (logs e
-  telemetria de banco). Logs MUST NOT registrar senhas, tokens ou dados sensíveis.
+### VI. Banco de Dados Relacional, Integridade e Migrations Controladas
+- **Fonte da Verdade:** PostgreSQL gerenciado em nuvem com Prisma ORM. Perfis, permissões, pacientes,
+  prontuários, objetivos terapêuticos e métricas de sessões residem exclusivamente no banco relacional.
+- **Sincronização com Provedor de Identidade:** O vínculo entre o Firebase Auth e a tabela `users` ocorre
+  estritamente via `firebase_uid` na rota `POST /auth/sync`.
+- **Migrations Controladas:** Toda alteração de schema MUST ser versionada pelo Prisma Migrate (`prisma migrate dev`
+  em desenvolvimento e `prisma migrate deploy` no CI/CD). Comandos destrutivos (`DROP TABLE`, `DROP COLUMN`,
+  `TRUNCATE`, `prisma migrate reset`, `prisma db push --force-reset`) são PROIBIDOS em produção.
+- **Soft Delete em Saúde:** A exclusão de pacientes, planos ou registros clínicos de prontuário MUST utilizar
+  obrigatoriamente exclusão lógica (`deletedAt: DateTime?`, `status: 'INACTIVE'`) para preservação histórica.
+- **Backups e Rollback:** Backups diários com retenção definida e scripts de reversão mapeados para restauração rápida.
+
+### VII. Observabilidade e Monitoramento Seguro
+- **Logs Estruturados:** A aplicação NestJS MUST utilizar o **NestJS Observe** para geração de logs em formato
+  JSON estruturado e coleta de métricas de performance.
+- **Telemetria com Axiom:** Ingestão de logs e telemetria de consultas de banco de dados centralizadas no **Axiom**.
+- **Privacidade de Dados de Saúde:** Os logs MUST NOT registrar senhas, tokens de autorização (JWT/Bearer),
+  cabeçalhos de autenticação ou dados sensíveis de pacientes nos payloads de log.
+
+---
 
 ## Stack Tecnológica Oficial
 
-- **Frontend Web (`apps/web`):** React, TypeScript, Tailwind CSS, shadcn/ui, React Router,
-  React Hook Form + Zod, TanStack Query, Axios, Lucide Icons, ESLint.
-- **Frontend Mobile (`apps/mobile`):** React Native, Expo, Expo Router, TypeScript,
-  TanStack Query, Axios, Lucide Icons (lucide-react-native), `jest-expo`, ESLint.
-- **Backend (`apps/api`):** Node.js, TypeScript, NestJS, Prisma ORM, `nestjs-zod`,
-  `firebase-admin`, `@nestjs/throttler`, `helmet`.
+- **Arquitetura de Repositório:** Monorepo (Turborepo + pnpm workspaces).
+- **Frontend Web (`apps/web`):** React 18+, TypeScript estrito, Vite, Tailwind CSS, shadcn/ui (Radix UI),
+  React Router, React Hook Form + Zod, TanStack Query, Axios, Lucide Icons, Vitest, ESLint.
+- **Frontend Mobile (`apps/mobile`):** React Native, Expo, Expo Router, TypeScript estrito, TanStack Query,
+  Axios, Lucide Icons (`lucide-react-native`), `jest-expo`, ESLint.
+- **Backend API (`apps/api`):** Node.js 22+, TypeScript estrito, NestJS, Prisma ORM, `nestjs-zod`,
+  Firebase Admin SDK, `@nestjs/throttler`, `helmet`, Vitest/Jest, Supertest.
+- **Banco de Dados:** PostgreSQL (gerenciado em nuvem) + Prisma ORM.
 - **Observabilidade:** NestJS Observe + Axiom.
-- **CI/CD:** GitHub Actions.
+- **CI/CD:** GitHub Actions (lint, build, test, migrations).
 
-Adoção de tecnologia fora desta lista MUST ser justificada e aprovada via emenda ou registro
-explícito de complexidade no plano da feature.
+---
 
 ## Guardrails de Agentes
 
 ### Agente Frontend Web (`apps/web`)
-- **NUNCA** realizar chamadas `axios` ou `fetch` diretamente em componentes React; usar sempre
-  hooks do TanStack Query.
-- **NUNCA** armazenar tokens de sessão, chaves privadas ou permissões críticas (`role`) em
-  `localStorage`/`sessionStorage` como fonte de verdade de segurança.
-- **NUNCA** criar formulários sem `react-hook-form` + schema Zod de `packages/shared`.
-- **NUNCA** sobrescrever estilos globais fora do padrão utilitário do Tailwind CSS ou quebrar
-  atributos de acessibilidade (`aria-*`) dos componentes shadcn/ui.
+- ❌ **NUNCA** realizar chamadas `axios` ou `fetch` soltas diretamente no corpo de componentes React — isolar em serviços e custom hooks do TanStack Query.
+- ❌ **NUNCA** confiar em perfis (`role`), `userId` ou tokens persistidos no `localStorage`/`sessionStorage` para validações críticas de segurança.
+- ❌ **NUNCA** criar formulários fora do padrão `react-hook-form` + schema Zod compartilhado (`packages/shared`).
+- ❌ **NUNCA** remover ou omitir atributos de acessibilidade (`aria-*`) dos primitivos Radix UI/shadcn.
+- ❌ **NUNCA** criar cards de jogos como caixas estáticas cinzas — aplicar obrigatoriamente o componente `GameCard` com banner colorido temático e micro-interação de hover.
+- ❌ **NUNCA** incluir anúncios, propagandas ou textos do tipo "sem anúncios" / "remover propagandas" na interface.
 
 ### Agente Frontend Mobile (`apps/mobile`)
-- **NUNCA** armazenar tokens de sessão, tokens de refresh ou chaves sensíveis em `AsyncStorage` comum —
-  utilizar obrigatoriamente armazenamento seguro encriptado nativo (`expo-secure-store`).
-- **NUNCA** realizar chamadas `axios` ou `fetch` diretamente em componentes visuais; usar sempre hooks
-  encapsulados do TanStack Query.
-- **NUNCA** criar formulários ou telas de mutação sem validação atrelada ao schema Zod de `packages/shared`.
-- **NUNCA** ignorar acessibilidade nativa — configurar obrigatoriamente `accessible={true}`,
-  `accessibilityLabel`, `accessibilityRole` e garantir contraste adequado e suporte a texto redimensionável.
-- **NUNCA** importar código diretamente de `apps/web` ou `apps/api`.
+- ❌ **NUNCA** armazenar tokens de sessão ou chaves privadas em `AsyncStorage` comum — usar `expo-secure-store`.
+- ❌ **NUNCA** realizar chamadas HTTP diretas em componentes visuais.
+- ❌ **NUNCA** omitir acessibilidade nativa (`accessible={true}`, `accessibilityLabel`, `accessibilityRole`).
+- ❌ **NUNCA** importar código diretamente de `apps/web` ou `apps/api`.
 
 ### Agente Backend & Database (`apps/api` e `packages/shared`)
-- **Arquitetura:** modular NestJS (`Controller` → `Service` → `PrismaService`). Todo endpoint
-  MUST declarar seus Guards e validar entradas com `ZodValidationPipe` a partir de
-  `packages/shared`.
-- **Fluxo de implementação obrigatório:**
-  1. Definir/atualizar o contrato Zod em `packages/shared`.
-  2. Atualizar `schema.prisma` e gerar migration sem perda de dados.
-  3. Implementar o `Service` exigindo o contexto do usuário autenticado (`uid`/`userId` e `role`
-     vindos do PostgreSQL) e escrever testes unitários e de autorização (`403 Forbidden`).
-- **NUNCA** executar comandos destrutivos nem gerar migrations com `DROP TABLE`, `DROP COLUMN`,
-  `TRUNCATE`, `prisma migrate reset` ou `prisma db push --force-reset` sem autorização humana
-  explícita.
-- **NUNCA** usar `$queryRawUnsafe` ou `$executeRawUnsafe` no Prisma.
-- **NUNCA** confiar em `userId`, `profissionalId` ou `role` vindos de `body`, `query` ou
-  `params` para checagem de permissão; sempre extrair do banco a partir do `uid` validado pelo
-  `FirebaseAuthGuard`.
-- **NUNCA** retornar entidades cruas do banco sem filtrar campos internos, nem expor dados de
-  pacientes pertencentes a outro `PROFISSIONAL`.
-- **NUNCA** registrar tokens, credenciais ou payloads brutos de autenticação nos logs enviados
-  ao Axiom / NestJS Observe.
+- ❌ **NUNCA** executar comandos SQL destrutivos (`DROP TABLE`, `DROP COLUMN`, `TRUNCATE`) ou comandos CLI perigosos (`prisma migrate reset`, `prisma db push --force-reset`).
+- ❌ **NUNCA** utilizar `$queryRawUnsafe` ou `$executeRawUnsafe` no Prisma.
+- ❌ **NUNCA** confiar em `userId`, `profissionalId` ou `role` passados via body, query ou params da requisição — sempre obter a identidade verificada do PostgreSQL via `@CurrentUser()`.
+- ❌ **NUNCA** retornar dados clínicos ou prontuários de pacientes sem filtrar pelo `profissionalId` do fonoaudiólogo responsável.
+- ❌ **NUNCA** registrar senhas, tokens, cabeçalhos `Authorization` ou dados clínicos sensíveis nos logs enviados ao Axiom.
+
+---
 
 ## Governance
 
-Esta Constituição é a autoridade suprema de engenharia, segurança e arquitetura do projeto.
-1. **Conformidade:** nenhuma funcionalidade ou refatoração MUST ser integrada se violar estes
-   princípios; revisões de PR MUST verificar conformidade, com foco em segurança, IDOR, LGPD
-   e manutenibilidade.
-2. **Emendas:** exigem proposta documentada, justificativa, aprovação da equipe, plano de
-   migração quando aplicável e atualização do Sync Impact Report.
-3. **Versionamento semântico:**
-   - **MAJOR:** remoção ou redefinição incompatível de princípios/governança.
-   - **MINOR:** novo princípio/seção ou expansão material de diretrizes.
-   - **PATCH:** esclarecimentos, redação e correções não semânticas.
-4. **Revisão de conformidade:** guardrails de agentes MUST ser respeitados por qualquer agente
-   automatizado; exceções exigem autorização humana explícita registrada no PR.
+Esta Constituição é a autoridade suprema de engenharia, arquitetura e segurança da **FonoGames**.
+1. **Conformidade Obrigatória:** Nenhum Pull Request ou implementação MUST ser aceito se violar qualquer princípio desta Constituição.
+2. **Procedimento de Emenda:** Qualquer alteração nos princípios ou na governança exige proposta documentada, justificativa técnica, plano de migração e atualização do Sync Impact Report.
+3. **Versionamento Semântico:**
+   * **MAJOR:** Alteração estrutural ou remoção incompatível de princípios de governança ou segurança.
+   * **MINOR:** Adição de novo princípio, perfil de usuário, modelo de uso ou expansão material das diretrizes.
+   * **PATCH:** Refinamento de redação, correções tipográficas e esclarecimentos não-semânticos.
+4. **Revisão de Conformidade:** Todos os agentes automatizados e desenvolvedores MUST aderir integralmente aos Guardrails de Agentes.
 
-**Version**: 2.1.0 | **Ratified**: 2026-10-19 | **Last Amended**: 2026-10-19
+**Version**: 2.3.0 | **Ratified**: 2026-10-19 | **Last Amended**: 2026-11-11
