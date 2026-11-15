@@ -180,6 +180,7 @@ Nenhum merge MUST ser realizado caso qualquer etapa do pipeline falhe.
 - ❌ **NUNCA** criar formulários fora do padrão `react-hook-form` + schema Zod compartilhado (`packages/shared`).
 - ❌ **NUNCA** remover ou omitir atributos de acessibilidade (`aria-*`) dos primitivos Radix UI/shadcn.
 - ❌ **NUNCA** criar cards de jogos como caixas estáticas cinzas — aplicar obrigatoriamente o componente `GameCard` com banner colorido temático e micro-interação de hover.
+- ❌ **NUNCA** hardcodar cores com valores hexadecimais (`#...`), RGB soltos ou classes arbitrárias (`bg-[#...]`) no JSX/Tailwind — utilizar obrigatoriamente os tokens semânticos do Design System (`bg-background`, `bg-card`, `bg-sidebar`, `bg-brand-teal`, `from-game-*-from`, etc.).
 - ❌ **NUNCA** incluir anúncios, propagandas ou textos do tipo "sem anúncios" / "remover propagandas" na interface.
 
 ### Agente Frontend Mobile (`apps/mobile`)

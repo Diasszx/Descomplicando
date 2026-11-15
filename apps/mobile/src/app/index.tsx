@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { HealthStatusCard } from '@/features/health/components/health-status-card';
+import { colors, spacing, typography } from '@/theme/tokens';
 
 export default function HomeScreen() {
   return (
@@ -25,20 +26,20 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-    backgroundColor: '#f8fafc',
+    padding: spacing.xl,
+    backgroundColor: colors.background,
   },
   title: {
-    fontSize: 24,
+    fontSize: typography.fontSize.xl,
     fontWeight: 'bold',
-    color: '#0f172a',
-    marginBottom: 8,
+    color: colors.foreground,
+    marginBottom: spacing.sm,
     textAlign: 'center',
   },
   subtitle: {
-    fontSize: 16,
-    color: '#64748b',
+    fontSize: typography.fontSize.md,
+    color: colors.mutedForeground,
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
   },
 });

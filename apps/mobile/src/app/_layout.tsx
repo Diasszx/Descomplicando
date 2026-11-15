@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { colors } from '@/theme/tokens';
 
 export default function RootLayout() {
   const [queryClient] = useState(
@@ -22,9 +23,9 @@ export default function RootLayout() {
       <Stack
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#0d9488',
+            backgroundColor: colors.brand.teal,
           },
-          headerTintColor: '#ffffff',
+          headerTintColor: colors.brand.tealForeground,
           headerTitleStyle: {
             fontWeight: 'bold',
           },

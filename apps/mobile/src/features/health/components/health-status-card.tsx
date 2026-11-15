@@ -1,5 +1,6 @@
 import { View, Text, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { useHealth } from '../hooks/use-health';
+import { colors, radius, spacing, typography } from '@/theme/tokens';
 
 export function HealthStatusCard() {
   const { data, isLoading, isError, error, refetch, isFetching } = useHealth();
@@ -7,7 +8,7 @@ export function HealthStatusCard() {
   if (isLoading) {
     return (
       <View style={[styles.card, styles.center]} accessibilityLabel="Carregando status do sistema">
-        <ActivityIndicator size="small" color="#0d9488" />
+        <ActivityIndicator size="small" color={colors.brand.teal} />
         <Text style={styles.loadingText}>Conectando ao servidor...</Text>
       </View>
     );
@@ -74,96 +75,96 @@ export function HealthStatusCard() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: '#ffffff',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: colors.card,
+    borderRadius: radius.pill,
+    padding: spacing.lg,
     width: '100%',
-    shadowColor: '#000',
+    shadowColor: colors.shadow.color,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 6,
     elevation: 2,
-    marginVertical: 12,
+    marginVertical: spacing.md,
   },
   center: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    padding: spacing.xl,
   },
   loadingText: {
-    marginTop: 8,
-    color: '#64748b',
-    fontSize: 14,
+    marginTop: spacing.sm,
+    color: colors.mutedForeground,
+    fontSize: typography.fontSize.base,
   },
   errorCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#ef4444',
+    borderLeftColor: colors.destructive,
   },
   errorTitle: {
-    fontSize: 16,
+    fontSize: typography.fontSize.md,
     fontWeight: 'bold',
-    color: '#dc2626',
-    marginBottom: 4,
+    color: colors.status.error,
+    marginBottom: spacing.xs,
   },
   errorText: {
-    fontSize: 14,
-    color: '#7f1d1d',
-    marginBottom: 12,
+    fontSize: typography.fontSize.base,
+    color: colors.status.errorForeground,
+    marginBottom: spacing.md,
   },
   retryButton: {
-    backgroundColor: '#0d9488',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
+    backgroundColor: colors.brand.teal,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    borderRadius: radius.sm,
     alignSelf: 'flex-start',
   },
   retryButtonText: {
-    color: '#ffffff',
+    color: colors.brand.tealForeground,
     fontWeight: '600',
-    fontSize: 13,
+    fontSize: typography.fontSize.sm,
   },
   emptyText: {
-    color: '#64748b',
+    color: colors.mutedForeground,
     fontStyle: 'italic',
   },
   successCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#059669',
+    borderLeftColor: colors.status.success,
   },
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   cardTitle: {
-    fontSize: 16,
+    fontSize: typography.fontSize.md,
     fontWeight: 'bold',
-    color: '#0f172a',
+    color: colors.cardForeground,
   },
   badge: {
-    backgroundColor: '#d1fae5',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
+    backgroundColor: colors.status.successSubtle,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.sm,
   },
   badgeText: {
-    color: '#065f46',
-    fontSize: 12,
+    color: colors.status.successForeground,
+    fontSize: typography.fontSize.xs,
     fontWeight: 'bold',
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingVertical: 4,
+    paddingVertical: spacing.xs,
   },
   label: {
-    color: '#64748b',
-    fontSize: 14,
+    color: colors.mutedForeground,
+    fontSize: typography.fontSize.base,
   },
   value: {
-    color: '#0f172a',
+    color: colors.cardForeground,
     fontWeight: '500',
-    fontSize: 14,
+    fontSize: typography.fontSize.base,
   },
 });

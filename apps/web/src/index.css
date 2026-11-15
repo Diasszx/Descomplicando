@@ -4,26 +4,80 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
+    /* Base Neutral Tokens */
+    --background: 210 40% 98%;           /* #f8fafc */
+    --foreground: 222 47% 11%;           /* #0f172a */
+    --card: 0 0% 100%;                   /* #ffffff */
     --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-    --primary: 187 85% 38%;
-    --primary-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;         /* #e2e8f0 */
+    --input: 214.3 31.8% 91.4%;
+    --ring: 174 72% 38%;
+    --radius: 1.5rem;                    /* 24px default for cards */
+
+    /* Core shadcn compatibility */
+    --primary: 174 72% 38%;              /* Clinical Teal */
+    --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222 47% 11%;
     --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 187 85% 95%;
-    --accent-foreground: 187 85% 25%;
+    --muted-foreground: 215 16% 47%;     /* #64748b */
+    --accent: 174 72% 95%;
+    --accent-foreground: 174 72% 25%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 187 85% 38%;
-    --radius: 0.5rem;
+
+    /* ============================================================
+       FonoGames Design System — Semantic Tokens
+       ============================================================ */
+
+    /* Brand & Clinical Accents */
+    --brand-teal: 174 72% 38%;
+    --brand-teal-hover: 174 72% 31%;
+    --brand-teal-foreground: 0 0% 100%;
+    --brand-amber: 45 93% 47%;
+    --brand-amber-foreground: 222 47% 11%;
+
+    /* Sidebar Navigation Tokens */
+    --sidebar-bg: 0 0% 100%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-active-bg: 54 90% 88%;
+    --sidebar-active-foreground: 222 47% 11%;
+    --sidebar-card-bg: 243 75% 97%;
+    --sidebar-card-border: 243 75% 90%;
+
+    /* Game Theme Tokens (Vibrant Category Banners) */
+    --game-rose-from: 350 89% 60%;
+    --game-rose-to: 350 89% 52%;
+    --game-rose-subtle: 350 100% 97%;
+    --game-rose-foreground: 350 89% 45%;
+
+    --game-emerald-from: 152 76% 46%;
+    --game-emerald-to: 173 80% 40%;
+    --game-emerald-subtle: 152 76% 96%;
+    --game-emerald-foreground: 152 76% 36%;
+
+    --game-purple-from: 262 83% 58%;
+    --game-purple-to: 243 75% 59%;
+    --game-purple-subtle: 262 83% 97%;
+    --game-purple-foreground: 262 83% 50%;
+
+    --game-blue-from: 217 91% 60%;
+    --game-blue-to: 226 70% 55%;
+    --game-blue-subtle: 217 91% 97%;
+    --game-blue-foreground: 217 91% 45%;
+
+    --game-amber-from: 45 93% 58%;
+    --game-amber-to: 35 92% 50%;
+    --game-amber-subtle: 45 93% 96%;
+    --game-amber-foreground: 35 92% 40%;
+
+    /* Clinical Status Badges */
+    --status-easy: 152 76% 40%;
+    --status-medium: 45 93% 47%;
+    --status-hard: 0 84% 60%;
+    --status-not-started: 215 16% 47%;
   }
 
   .dark {
@@ -33,18 +87,66 @@
     --card-foreground: 210 40% 98%;
     --popover: 217 33% 17%;
     --popover-foreground: 210 40% 98%;
-    --primary: 187 85% 45%;
+    --border: 217 33% 25%;
+    --input: 217 33% 25%;
+    --ring: 174 72% 45%;
+
+    --primary: 174 72% 45%;
     --primary-foreground: 222 47% 11%;
     --secondary: 217 33% 22%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217 33% 22%;
     --muted-foreground: 215 20% 65%;
-    --accent: 187 85% 20%;
-    --accent-foreground: 187 85% 75%;
+    --accent: 174 72% 20%;
+    --accent-foreground: 174 72% 75%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 25%;
-    --input: 217 33% 25%;
-    --ring: 187 85% 45%;
+
+    /* Dark Mode Brand & Clinical Accents */
+    --brand-teal: 174 72% 45%;
+    --brand-teal-hover: 174 72% 52%;
+    --brand-teal-foreground: 222 47% 11%;
+    --brand-amber: 45 93% 55%;
+    --brand-amber-foreground: 222 47% 11%;
+
+    /* Dark Mode Sidebar */
+    --sidebar-bg: 217 33% 17%;
+    --sidebar-border: 217 33% 25%;
+    --sidebar-active-bg: 54 60% 25%;
+    --sidebar-active-foreground: 54 90% 88%;
+    --sidebar-card-bg: 243 40% 20%;
+    --sidebar-card-border: 243 40% 30%;
+
+    /* Dark Mode Game Theme Tokens */
+    --game-rose-from: 350 80% 50%;
+    --game-rose-to: 350 80% 42%;
+    --game-rose-subtle: 350 50% 20%;
+    --game-rose-foreground: 350 89% 75%;
+
+    --game-emerald-from: 152 70% 38%;
+    --game-emerald-to: 173 70% 32%;
+    --game-emerald-subtle: 152 50% 18%;
+    --game-emerald-foreground: 152 76% 65%;
+
+    --game-purple-from: 262 70% 50%;
+    --game-purple-to: 243 65% 50%;
+    --game-purple-subtle: 262 50% 20%;
+    --game-purple-foreground: 262 83% 75%;
+
+    --game-blue-from: 217 80% 52%;
+    --game-blue-to: 226 60% 48%;
+    --game-blue-subtle: 217 50% 20%;
+    --game-blue-foreground: 217 91% 75%;
+
+    --game-amber-from: 45 80% 50%;
+    --game-amber-to: 35 80% 42%;
+    --game-amber-subtle: 45 50% 18%;
+    --game-amber-foreground: 45 93% 70%;
+
+    /* Dark Mode Status Badges */
+    --status-easy: 152 76% 55%;
+    --status-medium: 45 93% 55%;
+    --status-hard: 0 84% 65%;
+    --status-not-started: 215 20% 65%;
   }
 }

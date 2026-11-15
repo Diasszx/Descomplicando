@@ -11,7 +11,7 @@ export function Badge({ className, variant = 'default', ...props }: BadgeProps) 
     secondary: 'border-transparent bg-secondary text-secondary-foreground',
     destructive: 'border-transparent bg-destructive text-destructive-foreground',
     outline: 'text-foreground',
-    success: 'border-transparent bg-emerald-600 text-white',
+    success: 'border-transparent bg-status-easy text-brand-teal-foreground',
   }[variant];
 
   return (

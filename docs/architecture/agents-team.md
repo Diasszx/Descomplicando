@@ -46,6 +46,7 @@ Este documento consolida a estrutura, responsabilidades e os **guardrails de seg
   * ❌ **NUNCA** criar formulários fora do padrão `react-hook-form` + schema Zod compartilhado (`packages/shared`).
   * ❌ **NUNCA** remover atributos de acessibilidade (`aria-*`) dos primitivos Radix UI/shadcn.
   * ❌ **NUNCA** criar cards de jogos como caixas cinzas estáticas — aplicar obrigatoriamente o componente com banner ilustrado e micro-interação de hover.
+  * ❌ **NUNCA** hardcodar cores com valores hexadecimais (`#...`), RGB soltos ou classes utilitárias arbitrárias (`bg-[#...]`) no JSX/Tailwind — utilizar SEMPRE os tokens semânticos do Design System (`bg-background`, `bg-card`, `bg-sidebar`, `bg-brand-teal`, `from-game-rose-from`, `border-border`, etc.) para garantir manutenibilidade e suporte a temas.
   * ❌ **NUNCA** exibir propagandas, anúncios de terceiros ou textos de monetização do tipo "sem anúncios" / "remova propagandas" — a plataforma é de saúde e 100% livre de publicidade. Toda comunicação de planos Pro/Clínicos deve enfatizar recursos clínicos (prontuários ilimitados, relatórios com IA e acompanhamento terapêutico).
 
 ---
