@@ -31,7 +31,7 @@ export default function RootLayout() {
           },
         }}
       >
-        <Stack.Screen name="index" options={{ title: 'Projeto Fono' }} />
+        <Stack.Screen name="index" options={{ title: 'FonoGames' }} />
       </Stack>
     </QueryClientProvider>
   );
