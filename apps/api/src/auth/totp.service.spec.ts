@@ -1,7 +1,7 @@
 import { TOTP, Secret } from 'otpauth';
 import { TotpService } from './totp.service';
 
-const TEST_HEX_KEY = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+const TEST_HEX_KEY = 'ab'.repeat(32);
 
 describe('TotpService (US2 — RFC 6238 + AES-256-GCM)', () => {
   let service: TotpService;

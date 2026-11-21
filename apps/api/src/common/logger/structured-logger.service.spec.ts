@@ -103,7 +103,7 @@ describe('StructuredLoggerService', () => {
         totpCode: '654321',
         code: '987654',
         FIREBASE_PRIVATE_KEY: 'private-key-secret-value',
-        MFA_ENCRYPTION_KEY: '0123456789abcdef0123456789abcdef',
+        MFA_ENCRYPTION_KEY: 'a1'.repeat(16),
         actorUserId: 'user-safe-id',
       },
       'AuthService',
