@@ -1,3 +1,4 @@
+export * from './auth';
 export * from './health/health.schema';
 export * from './env/parse-env';
 export * from './theme/design-tokens';

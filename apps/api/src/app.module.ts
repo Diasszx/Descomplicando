@@ -1,9 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { APP_FILTER, APP_GUARD } from '@nestjs/core';
 import { StructuredLoggerService } from './common/logger/structured-logger.service';
+import { FonoThrottlerGuard } from './common/guards/fono-throttler.guard';
+import { SafeHttpExceptionFilter } from './common/filters/safe-http-exception.filter';
 import { PrismaModule } from './prisma/prisma.module';
 import { HealthModule } from './health/health.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -15,12 +18,17 @@ import { HealthModule } from './health/health.module';
     ]),
     PrismaModule,
     HealthModule,
+    AuthModule,
   ],
   providers: [
     StructuredLoggerService,
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: FonoThrottlerGuard,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: SafeHttpExceptionFilter,
     },
   ],
   exports: [StructuredLoggerService],

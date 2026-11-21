@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { Link } from 'react-router-dom';
 import {
   Home,
   BookOpen,
@@ -14,9 +15,15 @@ import {
   Trophy,
   HelpCircle,
   Sparkles,
+  ShieldCheck,
   type LucideIcon,
 } from 'lucide-react';
 import { GameCard, type GameCategoryTheme } from '@/components/ui/game-card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAuth } from '@/features/auth/hooks/use-auth';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -113,18 +120,51 @@ const SAMPLE_GAMES: LessonGame[] = [
 ];
 
 export const DashboardView: React.FC = () => {
+  const { session, isBootstrapping, sessionError, retrySessionSync, logout } = useAuth();
   const [activeNav, setActiveNav] = React.useState('home');
   const [activeFeedback, setActiveFeedback] = React.useState<string | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+  const feedbackTimerRef = React.useRef<number | null>(null);
+
+  React.useEffect(() => {
+    return () => {
+      if (feedbackTimerRef.current !== null) {
+        window.clearTimeout(feedbackTimerRef.current);
+      }
+    };
+  }, []);
+
+  const user = session?.user;
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout('manual');
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
+  const handleNavClick = (itemId: string) => {
+    if (itemId === 'logout') {
+      void handleLogout();
+      return;
+    }
+    setActiveNav(itemId);
+  };
 
   const handleCardClick = (title: string) => {
     setActiveFeedback(`Você clicou em "${title}". Efeito hover e interação confirmados!`);
-    setTimeout(() => setActiveFeedback(null), 3500);
+    if (feedbackTimerRef.current !== null) {
+      window.clearTimeout(feedbackTimerRef.current);
+    }
+    feedbackTimerRef.current = window.setTimeout(() => setActiveFeedback(null), 3500);
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground flex font-sans antialiased">
       {/* 1. SIDEBAR LATERAL (Design System Tokens) */}
-      <aside className="w-64 bg-sidebar border-r border-sidebar-border flex flex-col justify-between p-5 shrink-0 hidden md:flex">
+      <aside className="w-64 bg-sidebar border-r border-sidebar-border flex-col justify-between p-5 shrink-0 hidden md:flex">
         <div className="space-y-6">
           {/* Logo */}
           <div className="flex items-center gap-2.5 px-2 py-1">
@@ -149,9 +189,12 @@ export const DashboardView: React.FC = () => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveNav(item.id)}
+                  type="button"
+                  disabled={item.id === 'logout' && isLoggingOut}
+                  onClick={() => handleNavClick(item.id)}
                   className={cn(
                     'w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-200',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                     isSelected
                       ? 'bg-sidebar-active text-sidebar-active-foreground shadow-xs'
                       : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -162,56 +205,121 @@ export const DashboardView: React.FC = () => {
                       'w-5 h-5 transition-transform duration-200',
                       isSelected ? 'scale-105' : 'opacity-80',
                     )}
+                    aria-hidden="true"
                   />
-                  <span>{item.label}</span>
+                  <span>{item.id === 'logout' ? (isLoggingOut ? 'Saindo...' : 'Sair') : item.label}</span>
                 </button>
               );
             })}
           </nav>
         </div>
 
-        {/* Card de Destaque Clínico Inferior */}
-        <div className="relative rounded-3xl bg-sidebar-card border border-sidebar-card-border p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <h4 className="font-bold text-xs text-foreground">Edição Pro Clínica</h4>
+        <div className="space-y-3">
+          {user && !user.mfaEnabled && (
+            <div className="rounded-3xl bg-card border border-border p-4 space-y-2.5">
+              <div className="flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-primary" aria-hidden="true" />
+                <h4 className="font-bold text-xs text-foreground">Proteção extra</h4>
+              </div>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                Ative a verificação em duas etapas (TOTP) no aplicativo autenticador.
+              </p>
+              <Link
+                to="/mfa/configurar"
+                className="inline-flex w-full items-center justify-center py-2 px-3 rounded-xl bg-brand-teal hover:bg-brand-teal-hover text-brand-teal-foreground font-bold text-xs transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Configurar autenticação em 2 etapas (MFA)
+              </Link>
+            </div>
+          )}
+
+          {/* Card de Destaque Clínico Inferior */}
+          <div className="relative rounded-3xl bg-sidebar-card border border-sidebar-card-border p-4 space-y-3">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" aria-hidden="true" />
+              <h4 className="font-bold text-xs text-foreground">Edição Pro Clínica</h4>
+            </div>
+            <p className="text-[11px] leading-relaxed text-muted-foreground">
+              Exercícios personalizados, relatórios de evolução clínica e acompanhamento fonoaudiológico avançado.
+            </p>
+            <button
+              type="button"
+              className="w-full py-2.5 px-3 rounded-xl bg-brand-amber text-brand-amber-foreground font-bold text-xs shadow-md hover:brightness-105 active:scale-98 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Conhecer recursos clínicos
+            </button>
           </div>
-          <p className="text-[11px] leading-relaxed text-muted-foreground">
-            Exercícios personalizados, relatórios de evolução clínica e acompanhamento fonoaudiológico avançado.
-          </p>
-          <button
-            type="button"
-            className="w-full py-2.5 px-3 rounded-xl bg-brand-amber text-brand-amber-foreground font-bold text-xs shadow-md hover:brightness-105 active:scale-98 transition-all"
-          >
-            Experimentar 14 dias
-          </button>
         </div>
       </aside>
 
       {/* 2. ÁREA DE CONTEÚDO PRINCIPAL */}
       <main className="flex-1 flex flex-col p-6 lg:p-10 space-y-8 overflow-y-auto">
         {/* Top Header */}
-        <header className="flex items-center justify-between">
+        <header className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-extrabold text-foreground tracking-tight">Overview</h1>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Acompanhamento de desempenho e catálogo de jogos fonoaudiológicos.
+              {user
+                ? `Olá, ${user.name}. Acompanhe seu desempenho e explore os jogos fonoaudiológicos.`
+                : 'Acompanhamento de desempenho e catálogo de jogos fonoaudiológicos.'}
             </p>
           </div>
 
           <div className="flex items-center gap-3">
+            {isBootstrapping ? (
+              <Skeleton className="h-9 w-36 rounded-2xl" />
+            ) : (
+              user && (
+                <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-2xl bg-card border border-border text-sm">
+                  <span className="font-semibold text-card-foreground">{user.name}</span>
+                  <Badge variant="secondary">Autônomo</Badge>
+                  {user.mfaEnabled && <Badge variant="success">MFA Ativo</Badge>}
+                </div>
+              )
+            )}
             <button
               type="button"
-              className="relative flex items-center gap-2 px-4 py-2 rounded-2xl bg-card border border-border text-sm font-semibold text-foreground shadow-xs hover:bg-muted active:scale-98 transition-all"
+              className="relative flex items-center gap-2 px-4 py-2 rounded-2xl bg-card border border-border text-sm font-semibold text-foreground shadow-xs hover:bg-muted active:scale-98 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Bell className="w-4 h-4 text-muted-foreground" />
+              <Bell className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
               <span>Notifications</span>
-              <span className="w-5 h-5 rounded-full bg-game-rose-from text-white text-[11px] font-bold flex items-center justify-center">
+              <span className="w-5 h-5 rounded-full bg-game-rose-from text-brand-teal-foreground text-[11px] font-bold flex items-center justify-center">
                 1
               </span>
             </button>
+            {user && !user.mfaEnabled && (
+              <Link
+                to="/mfa/configurar"
+                className="md:hidden inline-flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-brand-teal hover:bg-brand-teal-hover text-brand-teal-foreground text-xs font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <ShieldCheck className="w-4 h-4" aria-hidden="true" />
+                Ativar MFA
+              </Link>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void handleLogout()}
+              disabled={isLoggingOut}
+              className="md:hidden rounded-2xl"
+              aria-label="Sair da conta"
+            >
+              <LogOut className="w-4 h-4 mr-2" aria-hidden="true" />
+              Sair
+            </Button>
           </div>
         </header>
+
+        {sessionError && (
+          <Alert variant="destructive">
+            <AlertDescription className="flex items-center justify-between gap-4 w-full">
+              <span>{sessionError}</span>
+              <Button type="button" size="sm" variant="outline" onClick={() => void retrySessionSync()}>
+                Tentar novamente
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Notificação / Feedback de Interação */}
         {activeFeedback && (
