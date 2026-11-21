@@ -9,6 +9,7 @@ export interface GameCardProps extends React.HTMLAttributes<HTMLDivElement> {
   title: string;
   itemsCount: number;
   unitLabel?: string;
+  category?: string;
   theme?: GameCategoryTheme;
   imageUrl?: string;
   imageAlt?: string;
@@ -30,7 +31,8 @@ export const GameCard = React.forwardRef<HTMLDivElement, GameCardProps>(
       title,
       itemsCount,
       unitLabel = 'Exercícios',
-      theme = 'blue',
+      category = 'Fonoaudiologia',
+      theme = 'emerald',
       imageUrl,
       imageAlt = '',
       difficultyBadge,
@@ -63,23 +65,23 @@ export const GameCard = React.forwardRef<HTMLDivElement, GameCardProps>(
           }
         }}
         className={cn(
-          'group relative flex flex-col justify-between p-3 bg-card text-card-foreground rounded-3xl border border-border shadow-xs',
-          'hover:-translate-y-2 hover:shadow-xl hover:shadow-muted/60',
+          'group relative flex flex-col justify-between p-4 bg-card text-card-foreground rounded-2xl border border-border shadow-xs',
+          'hover:-translate-y-1.5 hover:shadow-md hover:border-primary/50',
           'focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
           'cursor-pointer transition-all duration-300 ease-out select-none',
           className,
         )}
         {...props}
       >
-        {/* Banner Superior Ilustrado */}
+        {/* Banner Ilustrado Superior */}
         <div
           className={cn(
-            'relative w-full h-44 rounded-2xl overflow-hidden flex items-center justify-center p-4 bg-gradient-to-br',
+            'relative w-full h-36 rounded-xl overflow-hidden flex items-center justify-center p-4 bg-gradient-to-br border border-border/50 shadow-xs',
             THEME_GRADIENTS[theme],
           )}
         >
           {difficultyBadge && (
-            <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-card/90 text-card-foreground shadow-xs backdrop-blur-xs">
+            <span className="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-card/90 text-card-foreground border border-border/60 shadow-xs backdrop-blur-xs">
               {difficultyBadge}
             </span>
           )}
@@ -88,35 +90,41 @@ export const GameCard = React.forwardRef<HTMLDivElement, GameCardProps>(
             <img
               src={imageUrl}
               alt={imageAlt || title}
-              className="w-full h-full object-contain drop-shadow-md group-hover:scale-108 transition-transform duration-300 ease-out pointer-events-none"
+              className="w-full h-full object-contain drop-shadow-sm group-hover:scale-108 transition-transform duration-300 ease-out pointer-events-none"
               loading="lazy"
             />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-primary-foreground/20 flex items-center justify-center text-primary-foreground text-3xl font-bold group-hover:scale-110 transition-transform duration-300">
+            <div className="w-16 h-16 rounded-full bg-primary-foreground/20 text-primary-foreground flex items-center justify-center text-2xl font-bold group-hover:scale-110 transition-transform duration-300">
               {title.charAt(0)}
             </div>
           )}
         </div>
 
-        {/* Rodapé com Título, Metadados e Botão de Ação */}
-        <div className="pt-3 pb-1 px-1">
-          <h3 className="font-bold text-base text-card-foreground line-clamp-1 group-hover:text-primary transition-colors duration-200">
+        {/* Informações e Botão de Ação */}
+        <div className="pt-3">
+          <div className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            {category}
+          </div>
+          <h3 className="font-bold text-base text-card-foreground line-clamp-1 group-hover:text-primary transition-colors duration-200 mt-0.5">
             {title}
           </h3>
 
-          <div className="mt-2 flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
+          <div className="mt-3 flex items-center justify-between pt-2 border-t border-border/40">
+            <span className="text-xs font-medium text-foreground/80">
               {itemsCount} {unitLabel}
             </span>
 
-            <div
+            <button
+              type="button"
+              tabIndex={-1}
+              aria-hidden="true"
               className={cn(
-                'w-8 h-8 rounded-full bg-brand-teal text-brand-teal-foreground flex items-center justify-center shadow-md shadow-brand-teal/20',
-                'group-hover:scale-115 group-hover:bg-brand-teal-hover active:scale-95 transition-all duration-200',
+                'w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-xs',
+                'group-hover:bg-primary-hover group-hover:scale-105 active:scale-95 transition-all duration-200',
               )}
             >
-              <Play className="w-4 h-4 fill-current translate-x-0.5" aria-hidden="true" />
-            </div>
+              <Play className="w-4 h-4 fill-current translate-x-0.5" />
+            </button>
           </div>
         </div>
       </article>

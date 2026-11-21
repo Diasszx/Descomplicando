@@ -5,6 +5,7 @@ export default {
   theme: {
     extend: {
       colors: {
+        /* Tokens Semânticos Canônicos */
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
@@ -12,6 +13,7 @@ export default {
         foreground: 'hsl(var(--foreground))',
         primary: {
           DEFAULT: 'hsl(var(--primary))',
+          hover: 'hsl(var(--primary-hover))',
           foreground: 'hsl(var(--primary-foreground))',
         },
         secondary: {
@@ -37,22 +39,13 @@ export default {
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
-        },
-
-        /* FonoGames Semantic Design System Tokens */
-        brand: {
-          teal: {
-            DEFAULT: 'hsl(var(--brand-teal))',
-            hover: 'hsl(var(--brand-teal-hover))',
-            foreground: 'hsl(var(--brand-teal-foreground))',
-          },
-          amber: {
-            DEFAULT: 'hsl(var(--brand-amber))',
-            foreground: 'hsl(var(--brand-amber-foreground))',
-          },
+          patient: 'hsl(var(--card-patient))',
+          'patient-foreground': 'hsl(var(--card-patient-foreground))',
         },
         sidebar: {
           DEFAULT: 'hsl(var(--sidebar-bg))',
+          foreground: 'hsl(var(--sidebar-foreground))',
+          muted: 'hsl(var(--sidebar-muted))',
           border: 'hsl(var(--sidebar-border))',
           active: {
             DEFAULT: 'hsl(var(--sidebar-active-bg))',
@@ -106,7 +99,7 @@ export default {
         sans: ['Inter', 'sans-serif'],
       },
       borderRadius: {
-        '3xl': '1.5rem',
+        '3xl': '1.25rem',
         '2xl': '1rem',
         xl: '0.75rem',
         lg: 'var(--radius)',
