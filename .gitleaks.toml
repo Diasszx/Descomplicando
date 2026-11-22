@@ -1,0 +1,13 @@
+title = "FonoGames Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Falsos positivos de chaves de teste ficticias no commit historico d35e078 (ja substituidas por strings de baixa entropia)"
+commits = ["d35e0783e32ec57601020beaa621134a857a6fe0"]
+paths = [
+  '''^apps/api/src/config/env\.spec\.ts$''',
+  '''^apps/api/src/auth/totp\.service\.spec\.ts$''',
+  '''^apps/api/src/common/logger/structured-logger\.service\.spec\.ts$''',
+]

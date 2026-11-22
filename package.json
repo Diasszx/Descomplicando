@@ -8,6 +8,7 @@
   },
   "scripts": {
     "preinstall": "npx only-allow pnpm",
+    "prepare": "husky",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
@@ -18,6 +19,7 @@
     "ci": "turbo run lint typecheck build test db:validate"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
     "prettier": "^3.5.0",
     "turbo": "^2.4.0"
   },
