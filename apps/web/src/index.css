@@ -4,149 +4,143 @@
 
 @layer base {
   :root {
-    /* Base Neutral Tokens */
-    --background: 210 40% 98%;           /* #f8fafc */
-    --foreground: 222 47% 11%;           /* #0f172a */
-    --card: 0 0% 100%;                   /* #ffffff */
-    --card-foreground: 222 47% 11%;
+    /* Base Neutral Tokens (Branco Puro & Preto Grafite) */
+    --background: 0 0% 100%;
+    /* Branco puro (#ffffff) */
+    --foreground: 220 20% 14%;
+    /* Preto grafite elegante (#1d232a) */
+
+    /* Superfícies & Painéis (Branco Puro com borda e Cinza Claro Sutil) */
+    --card: 210 20% 98%;
+    /* Cinza-gelo sutil para containers secundários (#f8fafc) */
+    --card-foreground: 220 20% 14%;
+    --card-patient: 0 0% 100%;
+    /* Branco puro para prontuários clínicos (#ffffff) */
+    --card-patient-foreground: 220 20% 14%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --border: 214.3 31.8% 91.4%;         /* #e2e8f0 */
-    --input: 214.3 31.8% 91.4%;
-    --ring: 174 72% 38%;
-    --radius: 1.5rem;                    /* 24px default for cards */
+    --popover-foreground: 220 20% 14%;
 
-    /* Core shadcn compatibility */
-    --primary: 174 72% 38%;              /* Clinical Teal */
+    /* Bordas & Anéis de Foco Minerais */
+    --border: 220 13% 91%;
+    /* Borda suave mineral neutra (#e2e8f0) */
+    --input: 220 13% 91%;
+    --ring: 193 34% 30%;
+    /* Foco Azul Petróleo / Ardósia (#335c67) */
+    --radius: 1rem;
+    /* 16px */
+
+    /* Cor de Destaque Primária (Azul Petróleo / Ardósia Elegante) */
+    --primary: 193 34% 30%;
+    /* Azul Petróleo (#335c67) */
+    --primary-hover: 193 38% 22%;
+    /* Azul Petróleo Escuro (#223e46) */
     --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215 16% 47%;     /* #64748b */
-    --accent: 174 72% 95%;
-    --accent-foreground: 174 72% 25%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
 
-    /* ============================================================
-       FonoGames Design System — Semantic Tokens
-       ============================================================ */
-
-    /* Brand & Clinical Accents */
-    --brand-teal: 174 72% 38%;
-    --brand-teal-hover: 174 72% 31%;
+    /* Tokens Brand (compatibilidade com fluxo de autenticação) */
+    --brand-teal: 193 34% 30%;
+    --brand-teal-hover: 193 38% 22%;
     --brand-teal-foreground: 0 0% 100%;
     --brand-amber: 45 93% 47%;
     --brand-amber-foreground: 222 47% 11%;
 
-    /* Sidebar Navigation Tokens */
-    --sidebar-bg: 0 0% 100%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-active-bg: 54 90% 88%;
-    --sidebar-active-foreground: 222 47% 11%;
-    --sidebar-card-bg: 243 75% 97%;
-    --sidebar-card-border: 243 75% 90%;
+    /* Tons Secundários & Muted */
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 220 20% 14%;
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 16% 47%;
+    /* Ardósia suave (#64748b) */
+    --accent: 193 34% 94%;
+    --accent-foreground: 193 38% 22%;
 
-    /* Game Theme Tokens (Vibrant Category Banners) */
-    --game-rose-from: 350 89% 60%;
-    --game-rose-to: 350 89% 52%;
-    --game-rose-subtle: 350 100% 97%;
-    --game-rose-foreground: 350 89% 45%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
 
-    --game-emerald-from: 152 76% 46%;
-    --game-emerald-to: 173 80% 40%;
-    --game-emerald-subtle: 152 76% 96%;
-    --game-emerald-foreground: 152 76% 36%;
+    /* Sidebar Navigation (Cinza Claro Suave #eceff1) */
+    --sidebar-bg: 210 0% 93%;
+    --sidebar-foreground: 220 20% 14%;
+    --sidebar-muted: 215 16% 47%;
+    --sidebar-border: 220 13% 86%;
+    --sidebar-active-bg: 193 34% 30%;
+    --sidebar-active-foreground: 0 0% 100%;
+    --sidebar-card-bg: 0 0% 100%;
+    --sidebar-card-border: 220 13% 86%;
 
-    --game-purple-from: 262 83% 58%;
-    --game-purple-to: 243 75% 59%;
-    --game-purple-subtle: 262 83% 97%;
-    --game-purple-foreground: 262 83% 50%;
+    /* Temas para Jogos & Banners (Composição Harmoniosa com Base Verde/Sálvia) */
+    --game-rose-from: 350 50% 68%;
+    --game-rose-to: 350 45% 58%;
+    --game-rose-subtle: 350 40% 95%;
+    --game-rose-foreground: 350 45% 38%;
 
-    --game-blue-from: 217 91% 60%;
-    --game-blue-to: 226 70% 55%;
-    --game-blue-subtle: 217 91% 97%;
-    --game-blue-foreground: 217 91% 45%;
+    --game-emerald-from: 142 35% 55%;
+    --game-emerald-to: 150 40% 45%;
+    --game-emerald-subtle: 142 30% 94%;
+    --game-emerald-foreground: 142 35% 32%;
 
-    --game-amber-from: 45 93% 58%;
-    --game-amber-to: 35 92% 50%;
-    --game-amber-subtle: 45 93% 96%;
-    --game-amber-foreground: 35 92% 40%;
+    --game-purple-from: 260 30% 65%;
+    --game-purple-to: 255 35% 55%;
+    --game-purple-subtle: 260 25% 95%;
+    --game-purple-foreground: 260 30% 35%;
+
+    --game-blue-from: 205 35% 62%;
+    --game-blue-to: 215 40% 52%;
+    --game-blue-subtle: 205 30% 95%;
+    --game-blue-foreground: 205 35% 32%;
+
+    --game-amber-from: 38 55% 62%;
+    --game-amber-to: 32 60% 52%;
+    --game-amber-subtle: 38 45% 94%;
+    --game-amber-foreground: 32 50% 32%;
 
     /* Clinical Status Badges */
-    --status-easy: 152 76% 40%;
-    --status-medium: 45 93% 47%;
-    --status-hard: 0 84% 60%;
-    --status-not-started: 215 16% 47%;
+    --status-easy: 142 35% 42%;
+    --status-medium: 38 55% 45%;
+    --status-hard: 0 65% 50%;
+    --status-not-started: 141 8% 50%;
   }
 
   .dark {
-    --background: 222 47% 11%;
-    --foreground: 210 40% 98%;
-    --card: 217 33% 17%;
-    --card-foreground: 210 40% 98%;
-    --popover: 217 33% 17%;
-    --popover-foreground: 210 40% 98%;
-    --border: 217 33% 25%;
-    --input: 217 33% 25%;
-    --ring: 174 72% 45%;
+    --background: 141 12% 12%;
+    --foreground: 150 14% 94%;
+    --card: 141 10% 16%;
+    --card-foreground: 150 14% 94%;
+    --card-patient: 141 10% 19%;
+    --card-patient-foreground: 150 14% 94%;
+    --popover: 141 10% 16%;
+    --popover-foreground: 150 14% 94%;
+    --border: 141 8% 24%;
+    --input: 141 8% 24%;
+    --ring: 129 25% 50%;
 
-    --primary: 174 72% 45%;
-    --primary-foreground: 222 47% 11%;
-    --secondary: 217 33% 22%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 22%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 174 72% 20%;
-    --accent-foreground: 174 72% 75%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --primary: 129 25% 50%;
+    --primary-hover: 129 25% 58%;
+    --primary-foreground: 141 12% 10%;
 
-    /* Dark Mode Brand & Clinical Accents */
-    --brand-teal: 174 72% 45%;
-    --brand-teal-hover: 174 72% 52%;
-    --brand-teal-foreground: 222 47% 11%;
+    --brand-teal: 129 25% 50%;
+    --brand-teal-hover: 129 25% 58%;
+    --brand-teal-foreground: 141 12% 10%;
     --brand-amber: 45 93% 55%;
     --brand-amber-foreground: 222 47% 11%;
+    --secondary: 141 10% 20%;
+    --secondary-foreground: 150 14% 94%;
+    --muted: 141 10% 20%;
+    --muted-foreground: 131 14% 65%;
+    --accent: 129 20% 22%;
+    --accent-foreground: 129 25% 75%;
+    --destructive: 0 62.8% 45%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Dark Mode Sidebar */
-    --sidebar-bg: 217 33% 17%;
-    --sidebar-border: 217 33% 25%;
-    --sidebar-active-bg: 54 60% 25%;
-    --sidebar-active-foreground: 54 90% 88%;
-    --sidebar-card-bg: 243 40% 20%;
-    --sidebar-card-border: 243 40% 30%;
+    --sidebar-bg: 141 10% 15%;
+    --sidebar-border: 141 8% 24%;
+    --sidebar-active-bg: 129 25% 50%;
+    --sidebar-active-foreground: 141 12% 10%;
+    --sidebar-card-bg: 141 10% 18%;
+    --sidebar-card-border: 141 8% 24%;
+  }
 
-    /* Dark Mode Game Theme Tokens */
-    --game-rose-from: 350 80% 50%;
-    --game-rose-to: 350 80% 42%;
-    --game-rose-subtle: 350 50% 20%;
-    --game-rose-foreground: 350 89% 75%;
-
-    --game-emerald-from: 152 70% 38%;
-    --game-emerald-to: 173 70% 32%;
-    --game-emerald-subtle: 152 50% 18%;
-    --game-emerald-foreground: 152 76% 65%;
-
-    --game-purple-from: 262 70% 50%;
-    --game-purple-to: 243 65% 50%;
-    --game-purple-subtle: 262 50% 20%;
-    --game-purple-foreground: 262 83% 75%;
-
-    --game-blue-from: 217 80% 52%;
-    --game-blue-to: 226 60% 48%;
-    --game-blue-subtle: 217 50% 20%;
-    --game-blue-foreground: 217 91% 75%;
-
-    --game-amber-from: 45 80% 50%;
-    --game-amber-to: 35 80% 42%;
-    --game-amber-subtle: 45 50% 18%;
-    --game-amber-foreground: 45 93% 70%;
-
-    /* Dark Mode Status Badges */
-    --status-easy: 152 76% 55%;
-    --status-medium: 45 93% 55%;
-    --status-hard: 0 84% 65%;
-    --status-not-started: 215 20% 65%;
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: 'Inter', sans-serif;
   }
 }
